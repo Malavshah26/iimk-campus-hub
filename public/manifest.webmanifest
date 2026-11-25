@@ -1,0 +1,9 @@
+{
+  "name": "IIMK Campus Hub",
+  "short_name": "Campus Hub",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f4583",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
