@@ -60,8 +60,10 @@ function NowBoard() {
   const { ref } = useRef_()
   const washers = useLive<Washer>('now-washers', () => supabase.from('washers').select('id,status,ends_at,hostel') as never, ['washers'])
   const nm = nowMin()
-  useCal()
+  const cal = useCal()
   const classes = myClasses(ref, new Date(), profile.year, profile.section)
+  // No calendar and no timetable for this section yet: point to calendar sync instead of "All done".
+  const noSchedule = !cal && !ref.timetable.some(r => r.year === profile.year && r.section === profile.section)
   const c = classes.find(x => mins(x.ends) > nm)
   const busList = ref.bus.filter(b => b.day_type === (isWeekend() ? 'weekend' : 'weekday') && b.direction === 'out').map(b => b.time).sort()
   const bus = busList.find(t => mins(t) >= nm)
@@ -76,7 +78,9 @@ function NowBoard() {
   const byId = new Map(washers.data.map(w => [w.id, w]))
   const free = h ? Array.from({ length: h.machines }, (_, i) => `${h.code}-${i + 1}`).filter(id => washerState(byId.get(id)) === 'free').length : 0
   const tiles: [string, string, string, string][] = [
-    ['#classes', c && mins(c.starts) <= nm ? 'Class on now' : 'Next class', c ? (mins(c.starts) <= nm ? 'till ' + c.ends : c.starts) : 'All done', c ? c.name : 'no more classes today'],
+    noSchedule
+      ? ['#classes', 'Classes', 'Sync calendar', 'tap to add your Google Calendar']
+      : ['#classes', c && mins(c.starts) <= nm ? 'Class on now' : 'Next class', c ? (mins(c.starts) <= nm ? 'till ' + c.ends : c.starts) : 'All done', c ? c.name : 'no more classes today'],
     ref.shuttle.length
       ? ['#bus', 'Shuttle from ' + stop, shuttle ? showTime(shuttle.at) : 'No more', shuttle ? `in ${inFmt(mins(shuttle.at) - nm)} → ${shuttle.rest[0].stop}` : 'check tomorrow’s times']
       : ['#bus', 'Next bus to city', bus || 'No more', bus ? 'in ' + inFmt(mins(bus) - nm) : 'check tomorrow’s times'],

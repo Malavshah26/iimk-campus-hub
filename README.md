@@ -47,8 +47,8 @@ supabase/migrations/0001_init.sql   tables, access rules, photo storage, live up
 supabase/migrations/0002_campus_life.sql  notices, events, complaints, mess feedback, booking, admin tools
 supabase/migrations/0003_campus_shuttle.sql  campus shuttle + timetable w.e.f. 09.06.2026
 supabase/menus/                     monthly mess menus (run the latest in the SQL editor)
-supabase/seed.sql                   hostels, class timings, sample menu/bus/contacts
-supabase/seed_timetable.sql         SAMPLE timetable (regenerate: npm run seed:timetable)
+supabase/seed.sql                   hostels, class timings, sample menu and contacts
+supabase/seed_timetable.sql         made-up demo timetable; don't load it for real use
 src/pages/                          one file per tab
 src/lib/                            Supabase client, auth, data loading, photos, notifications, helpers
 api/keepalive.js                    daily Vercel cron that keeps the free database awake
@@ -58,6 +58,6 @@ docs/SETUP.md                       step-by-step deployment guide
 
 ## Before launch
 
-- Replace the **sample** timetable, mess menu, bus times and campus phone numbers (Admin page).
+- Replace the **sample** campus phone numbers and check meal timings (Admin page). Don't load the demo timetable; students sync their Google Calendar instead.
 - Set the real number of washing machines per hostel (Admin → Hostels) and the real rooms/courts (Admin → Facilities).
 - Set up a custom email sender in Supabase (see SETUP step 4) so sign-in emails don't hit the default sending limits.

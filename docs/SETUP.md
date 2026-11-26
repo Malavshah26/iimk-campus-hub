@@ -26,7 +26,7 @@ In the Supabase dashboard open **SQL Editor → New query**, then run these file
 2. `supabase/migrations/0002_campus_life.sql`: notices, events, complaints, mess feedback, room booking, admin tools
 3. `supabase/migrations/0003_campus_shuttle.sql`: campus shuttle, with the timetable w.e.f. 09.06.2026
 4. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
-5. `supabase/seed_timetable.sql`: a **sample** timetable for every section
+5. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
 6. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
 
 Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002, 0003 and the seeds.
@@ -104,7 +104,7 @@ Reload the site: an **Admin** button appears in the header. From now on, add or 
 
 On the **Admin** page:
 
-- **Timetable:** easiest is a spreadsheet. Make columns **Year, Section, Day, Period, Code, Course, Room** (Period = 1–6 or a start time like 09:15), copy the rows, paste them into **Import from a spreadsheet**, check the preview, **Import**. *Download current timetable (CSV)* gives you a starting file. You can also edit one section at a time in the grid.
+- **Timetable:** optional. Students can sync their own Google Calendar on the Classes tab, which already has their real sessions. A section timetable is only needed for *Compare people* and for students who don't sync. Easiest is a spreadsheet. Make columns **Year, Section, Day, Period, Code, Course, Room** (Period = 1–6 or a start time like 09:15), copy the rows, paste them into **Import from a spreadsheet**, check the preview, **Import**. *Download current timetable (CSV)* gives you a starting file. You can also edit one section at a time in the grid.
 - **Mess menu:** each month, either run a menu file like `supabase/menus/2026-11_mess_menu.sql` or edit it on the page. Check **Meal timings** at the bottom too.
 - **Bus:** the campus shuttle (PGP Auditorium, Phase V Campus, C&D Housing, Maingate) is loaded by 0003. When a new bus sheet comes out, copy its rows from Excel and paste them into **Admin → Bus → Campus shuttle**; it shows a preview and replaces the old timetable. City buses (if any) go below it.
 - **Contacts:** replace placeholders. Campus numbers starting `90000` are fake.

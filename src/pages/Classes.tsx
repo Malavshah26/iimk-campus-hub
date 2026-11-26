@@ -142,7 +142,9 @@ function MyTimetable() {
               </div>
             </div>
           )
-        }) : <Empty>{fromCal ? 'Nothing in your calendar for this day.' : new Date(selected + 'T00:00').getDay() === 0 ? 'No classes on Sunday.' : 'No classes in the timetable for this day.'}</Empty>}
+        }) : <Empty>{fromCal ? 'Nothing in your calendar for this day.'
+          : !ref.timetable.some(r => r.year === year && r.section === section) ? `There’s no timetable for ${year === '1' ? 'Year 1' : 'Year 2'}, ${sectionLabel(section)} yet. Sync your Google Calendar above to see your own classes.`
+          : new Date(selected + 'T00:00').getDay() === 0 ? 'No classes on Sunday.' : 'No classes in the timetable for this day.'}</Empty>}
       </div>
       <aside className="panel stick">
         <h2>Your attendance</h2>
@@ -209,6 +211,7 @@ function Compare() {
       <div className="panel" style={{ marginBottom: 16 }}>
         <h2>Find a common free slot</h2>
         <p className="sub">Add classmates to see everyone’s classes together.</p>
+        {all.some(p => !ref.timetable.some(r => r.year === p.y && r.section === p.s)) && <div className="status show">This uses section timetables, and some sections here don’t have one yet, so they’ll look free. A council admin can add them in Admin → Timetable.</div>}
         <div className="people">
           {all.map((p, i) => (
             <span key={i} className="pchip" style={{ ['--c' as string]: p.c }}>
