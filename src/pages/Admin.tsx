@@ -5,8 +5,9 @@ import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import type { BusTime, Contact, Hostel, Slot, Year } from '../lib/types'
 import { Chips } from '../components/Bits'
+import { AdminsAdmin, FacilitiesAdmin, FeedbackAdmin, TimetableImport, UsageAdmin } from './AdminMore'
 
-type Tab = 'timetable' | 'mess' | 'bus' | 'contacts' | 'hostels' | 'slots'
+type Tab = 'timetable' | 'mess' | 'feedback' | 'bus' | 'contacts' | 'hostels' | 'facilities' | 'slots' | 'admins' | 'usage'
 const DAYNAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export function Admin() {
@@ -16,13 +17,18 @@ export function Admin() {
   return (
     <section>
       <div className="hd"><div><h2>Council admin</h2><p className="sub">Changes apply for everyone as soon as you save.</p></div></div>
-      <Chips label="Admin area" value={tab} onChange={setTab} options={[['timetable', 'Timetable'], ['mess', 'Mess menu'], ['bus', 'Bus'], ['contacts', 'Contacts'], ['hostels', 'Hostels'], ['slots', 'Class timings']]} />
+      <Chips label="Admin area" value={tab} onChange={setTab} options={[['timetable', 'Timetable'], ['mess', 'Mess menu'], ['feedback', 'Mess feedback'], ['bus', 'Bus'], ['contacts', 'Contacts'], ['hostels', 'Hostels'], ['facilities', 'Facilities'], ['slots', 'Class timings'], ['admins', 'Admins'], ['usage', 'Usage & clean-up']]} />
+      <p className="note" style={{ margin: '0 0 12px' }}>Notices are posted from the Notices tab; complaint replies from the Complaints tab.</p>
       {tab === 'timetable' && <TimetableAdmin />}
       {tab === 'mess' && <MessAdmin />}
       {tab === 'bus' && <BusAdmin />}
       {tab === 'contacts' && <ContactsAdmin />}
       {tab === 'hostels' && <HostelsAdmin />}
       {tab === 'slots' && <SlotsAdmin />}
+      {tab === 'feedback' && <FeedbackAdmin />}
+      {tab === 'facilities' && <FacilitiesAdmin />}
+      {tab === 'admins' && <AdminsAdmin />}
+      {tab === 'usage' && <UsageAdmin />}
     </section>
   )
 }
@@ -88,6 +94,7 @@ function TimetableAdmin() {
             })}</tr>)}</tbody>
         </table>
       </div>
+      <TimetableImport />
     </div>
   )
 }

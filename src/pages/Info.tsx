@@ -3,6 +3,7 @@ import { useRef_ } from '../lib/ref'
 import { useTick } from '../lib/useLive'
 import { DAYS, inFmt, isWeekend, mins, norm, nowMin } from '../lib/util'
 import { Chips, Empty } from '../components/Bits'
+import { MealVote, useMealFeedback } from '../components/MealFeedback'
 
 export function Bus() {
   useTick()
@@ -42,9 +43,10 @@ export function Mess() {
   const nm = nowMin()
   const cur = ref.meals.find(m => nm >= mins(m.starts) && nm < mins(m.ends)) || ref.meals.find(m => mins(m.starts) > nm)
   const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const fb = useMealFeedback()
   return (
     <section>
-      <div className="hd"><h2>Mess menu</h2></div>
+      <div className="hd"><div><h2>Mess menu</h2><p className="sub">Rate today’s meals once they’re served. Totals help the mess committee.</p></div></div>
       <Chips label="Day" value={day} onChange={setDay} options={order.map(d => [d, d === todayName ? d + ' (today)' : d] as [string, string])} />
       {ref.meals.map(m => {
         const items = ref.menu.find(r => r.day === day && r.meal === m.meal)?.items || '—'
@@ -52,7 +54,7 @@ export function Mess() {
         return <div key={m.meal} className={'meal' + (isCur ? ' cur' : '')}>
           <div><b>{m.label}</b><small>{m.starts}–{m.ends}</small>
             {isCur && <div><span className="tag t-ok" style={{ marginTop: 6 }}>{nm >= mins(m.starts) ? 'Serving now' : 'Up next'}</span></div>}</div>
-          <div>{items}</div>
+          <div>{items}{day === todayName && nm >= mins(m.starts) && items !== '—' && <MealVote meal={m.meal} fb={fb} />}</div>
         </div>
       })}
     </section>

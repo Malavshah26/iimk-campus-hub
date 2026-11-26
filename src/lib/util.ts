@@ -69,3 +69,37 @@ export function saveLocal(key: string, value: unknown) {
     /* storage unavailable */
   }
 }
+
+/** Two HH:MM ranges overlap (touching ends don't count). */
+export const overlaps = (a1: string, a2: string, b1: string, b2: string) => mins(a1) < mins(b2) && mins(b1) < mins(a2)
+
+const icsStamp = (date: string, hm: string) => new Date(`${date}T${hm}:00+05:30`).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+
+export interface CalItem { title: string; date: string; starts: string; ends: string; place?: string | null; details?: string | null }
+
+/** "Add to Google Calendar" link (times are campus time, IST). */
+export function googleCal(e: CalItem): string {
+  const p = new URLSearchParams({
+    action: 'TEMPLATE', text: e.title, dates: `${icsStamp(e.date, e.starts)}/${icsStamp(e.date, e.ends)}`,
+    details: e.details || '', location: e.place || '', ctz: 'Asia/Kolkata',
+  })
+  return 'https://calendar.google.com/calendar/render?' + p.toString()
+}
+
+/** Downloads an .ics file that any calendar app can open. */
+export function downloadIcs(e: CalItem) {
+  const esc = (s: string) => s.replace(/[\\;,]/g, m => '\\' + m).replace(/\r?\n/g, '\\n')
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//IIMK Campus Hub//EN', 'BEGIN:VEVENT',
+    `UID:${crypto.randomUUID()}@campushub`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
+    `DTSTART:${icsStamp(e.date, e.starts)}`, `DTEND:${icsStamp(e.date, e.ends)}`, `SUMMARY:${esc(e.title)}`,
+    e.place ? `LOCATION:${esc(e.place)}` : '', e.details ? `DESCRIPTION:${esc(e.details)}` : '',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].filter(Boolean).join('\r\n')
+  const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = e.title.replace(/[^\w ]+/g, '').trim().slice(0, 40) + '.ics'
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 2000)
+}

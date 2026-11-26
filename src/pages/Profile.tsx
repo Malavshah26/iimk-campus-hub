@@ -4,6 +4,7 @@ import { useRef_ } from '../lib/ref'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import type { Year } from '../lib/types'
+import { askNotify, canNotify, notify, notifyAllowed, notifyBlocked } from '../lib/notify'
 
 export function ProfileForm({ first = false }: { first?: boolean }) {
   const { session, profile, reloadProfile, signOut, isAdmin } = useAuth()
@@ -54,6 +55,7 @@ export function ProfileForm({ first = false }: { first?: boolean }) {
         </select>
         <button className="btn pri" type="submit" disabled={busy}>{busy ? 'Saving…' : first ? 'Continue' : 'Save'}</button>
         {msg && <p className="note err">{msg}</p>}
+        {!first && <Notifications />}
         {!first && (
           <div className="acts" style={{ marginTop: 18 }}>
             {isAdmin && <a className="btn" href="#admin">Council admin</a>}
@@ -62,6 +64,21 @@ export function ProfileForm({ first = false }: { first?: boolean }) {
         )}
         {first && <button className="btn wide" type="button" onClick={signOut}>Sign out</button>}
       </form>
+    </div>
+  )
+}
+
+function Notifications() {
+  const [, bump] = useState(0)
+  if (!canNotify()) return <p className="note">This browser can’t show notifications. Install Campus Hub (browser menu → Add to Home screen) to get them.</p>
+  return (
+    <div className="notif">
+      <span className="lab">Notifications</span>
+      {notifyAllowed() ? <>
+        <p className="note" style={{ marginTop: 0 }}>On. You’ll hear when your wash is done, someone joins your ride, your complaint is updated, a notice is posted, and before events and bookings, while Campus Hub is open (a background tab or the installed app is enough).</p>
+        <button className="btn inline" type="button" onClick={() => notify('Campus Hub', 'Notifications are working.')}>Send a test</button>
+      </> : notifyBlocked() ? <p className="note" style={{ marginTop: 0 }}>Blocked in this browser. Allow them in the site settings (the icon left of the address bar), then reload.</p>
+        : <button className="btn inline" type="button" onClick={async () => { await askNotify(); bump(n => n + 1) }}>Turn on notifications</button>}
     </div>
   )
 }

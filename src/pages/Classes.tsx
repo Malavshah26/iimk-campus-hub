@@ -10,6 +10,17 @@ import { Chips, Empty } from '../components/Bits'
 
 type Mode = 'mine' | 'cmp'
 
+/** How many more classes you can miss (or must attend in a row) to stay at 75%. */
+export function skipLine({ y, t }: { y: number; t: number }): string {
+  if (!t) return ''
+  if (y * 4 >= t * 3) {
+    const k = Math.floor((y * 4) / 3 - t + 1e-9)
+    return k > 0 ? `Can miss ${k} more` : 'At the limit: don’t miss the next one'
+  }
+  const n = Math.ceil(3 * t - 4 * y)
+  return `Attend the next ${n} in a row to get back to 75%`
+}
+
 export function Classes() {
   const [mode, setMode] = useState<Mode>(() => local<Mode>('hub.tmode', 'mine'))
   useEffect(() => saveLocal('hub.tmode', mode), [mode])
@@ -124,9 +135,10 @@ function MyTimetable() {
             return <div className="crow" key={code}>
               <div className="ch"><span>{courseNames.get(code) || code}</span><b>{x.y}/{x.t} · {p}%</b></div>
               <div className="bar"><i className={p < 75 ? 'low' : ''} style={{ width: p + '%' }} /></div>
+              <div className="meta">{skipLine(x)}</div>
             </div>
           })}
-          <p className="note">Below 75% shows in red.</p>
+          <p className="note">Below 75% shows in red. “Can miss” counts how many more classes you could skip and stay at 75% or above.</p>
         </> : <Empty>Mark classes as attended or missed and your record builds up here.</Empty>}
       </aside>
     </div>

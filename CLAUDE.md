@@ -7,16 +7,27 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 ## Stack
 - React 19 + TypeScript + Vite, static site (deploy on Vercel). Hash routing (`#classes`, `#rides`, ...).
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
-- No custom server. All access control lives in `supabase/migrations/0001_init.sql`.
+- No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life). New
+  schema changes go in a new numbered file that is safe to re-run (`if not exists`, `drop policy if exists`).
+- Only server code: `api/keepalive.js`, a daily Vercel cron calling `rpc/ping` so the free project doesn't pause.
 
 ## Key decisions (keep unless the user changes them)
 - Only emails at `iimk.ac.in` (or a subdomain) can use the app. Enforced by `public.is_campus_user()`
   reading `public.settings.allowed_email_domain`, and mirrored client-side by `isAllowedEmail()`.
-- Admins are rows in `public.admins` (added via SQL only). Admins edit reference data on `#admin`
-  and can delete any post.
+- Admins are rows in `public.admins`. The first one is added via SQL; after that admins add/remove others in
+  Admin → Admins (`admin_add` / `admin_remove` RPCs, can't remove the last admin). Admins edit reference data
+  on `#admin`, post notices, set complaint status/replies and can delete any post.
 - Reference data (sections, hostels, class_slots, timetable, bus_times, meal_times, mess_menu, contacts)
-  is loaded once by `RefProvider` (`src/lib/ref.tsx`). Student posts use `useLive` (`src/lib/useLive.ts`)
-  which refetches on Realtime changes.
+  is loaded by `RefProvider` (`src/lib/ref.tsx`), cached in localStorage (`hub.ref`) so the app opens offline,
+  and refreshed on focus after 10 min. Student posts use `useLive` (`src/lib/useLive.ts`), which refetches on
+  Realtime changes. Pages are lazy-loaded in `App.tsx`; keep shared helpers in `src/lib` or `src/components`
+  (not in page files) so they don't pull pages into the startup bundle.
+- Complaints: students can only open and close their own; status/response changes are admin-only (trigger
+  `complaints_guard`). Bookings: overlap, hours, max length, 14-day window and 4-upcoming limit enforced by
+  trigger `bookings_check`. Meal ratings: individual votes private; totals via `meal_summary()` (comments
+  only returned to admins).
+- Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
+  open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables
   make relationships ambiguous. Keep the hints when adding queries.
 - Attendance is private per user (`attendance` table, key = `year+section|YYYY-MM-DD|slot`).
@@ -34,18 +45,20 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 - Mess menu, bus times, campus and local phone numbers (all `90000 ...` numbers are fake;
   national helplines 112/108/100/101/1091 are real)
 - Washing machines per hostel
+- Facilities for booking (6 sample rooms/courts added by 0002)
 
 ## Status
-- Builds cleanly (`npm run build`). RLS policies were tested against PGlite with stubbed auth.
-- Not yet tested against a live Supabase project: sign-in emails and photo upload are the first things to verify.
+- Live: GitHub `Malavshah26/iimk-campus-hub` → Vercel, Supabase project in Mumbai (set up 2026-11-26).
+- Builds cleanly (`npm run build`). SQL (0001 + 0002, incl. RLS and triggers) tested against PGlite with
+  stubbed auth/storage (52 checks). UI clicked through against a mock REST backend, not a live project.
+- Sign-in emails use Supabase's default sender: no custom SMTP yet, so templates can't be edited (no code in
+  the email) and sending is rate-limited. Needs SMTP before launch (docs/SETUP.md step 4).
 - Deployment steps: `docs/SETUP.md`.
 
-## Ideas the user has discussed but not built
-- Complaint tracker (open / in progress / fixed) for hostel, Wi-Fi, mess issues
-- Notices and an events calendar that flags clashes
-- Facility booking (discussion rooms, courts)
-- Mess feedback (thumbs up/down per meal)
-- Notifications (wash done, someone joined your ride)
+## Ideas not built yet
+- Real push notifications (needs a server, e.g. Supabase Edge Function + Web Push keys)
+- Anonymous complaints (needs a view or RPC that hides user_id; RLS alone can't hide a column)
+- PNG app icons for older Android installs (only SVG now)
 
 ## Conventions
 - Keep components small and in `src/pages/<Tab>.tsx`; shared bits in `src/components/`.

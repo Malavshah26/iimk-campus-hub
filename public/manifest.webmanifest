@@ -1,9 +1,18 @@
 {
   "name": "IIMK Campus Hub",
   "short_name": "Campus Hub",
+  "description": "Timetable, attendance, events, mess, bus, laundry, carpool and more for IIM Kozhikode students.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1f4583",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
+  "shortcuts": [
+    { "name": "Classes", "url": "/#classes" },
+    { "name": "Mess menu", "url": "/#mess" },
+    { "name": "Laundry", "url": "/#laundry" },
+    { "name": "Events", "url": "/#events" }
+  ]
 }

@@ -199,3 +199,44 @@ table.adm td.tm b{display:block;color:var(--ink)}
 .row3{display:grid;grid-template-columns:8em minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center}
 .ck{display:flex;gap:6px;align-items:center;font-size:14px}
 .ck input{width:auto;min-height:0}
+
+/* update 2: notices, events, complaints, bookings, feedback */
+.badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--hi);color:var(--onhi);font-size:12px;font-weight:700;vertical-align:1px}
+.banner{display:flex;align-items:center;gap:10px;margin:0 0 16px;padding:10px 8px 10px 14px;border-radius:12px;background:var(--pale);border:1px solid var(--line);box-shadow:inset 3px 0 0 var(--hi)}
+.banner a{flex:1;color:var(--ink);text-decoration:none;font-size:15px}
+.banner a span{color:var(--mut)}
+.banner button{width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--mut);font-size:20px;cursor:pointer;flex:none}
+.banner button:hover{background:var(--soft)}
+.steps{margin:8px 0 4px;padding-left:20px;font-size:15px;color:var(--ink)}
+.steps li{margin:4px 0}
+.pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.pre a{color:var(--hi)}
+.card.notice.pin{box-shadow:inset 3px 0 0 var(--hi)}
+.btn.on{background:var(--leafbg);color:var(--hi);border-color:var(--hi)}
+.chip.on.bad{background:var(--redbg);color:var(--red);border-color:var(--red)}
+.clash{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.45}
+.clash.ok{background:var(--leafbg);color:var(--leaf)}
+.clash.warn{background:var(--sunbg);color:var(--ink);box-shadow:inset 3px 0 0 var(--sun)}
+.evday{margin:0 0 20px}
+.evday>h3{font-size:16px;color:var(--mut);margin:0 0 8px;font-family:Inter,sans-serif;font-weight:600}
+.when{font:700 16px Sora,sans-serif;white-space:nowrap}
+.flag{margin-top:8px;font-size:14px;padding:6px 10px;border-radius:8px;background:var(--redbg);color:var(--red)}
+.flag.soft{background:var(--sunbg);color:var(--sun)}
+.reply{margin-top:8px;padding:8px 12px;border-radius:10px;background:var(--pale);font-size:15px}
+.replybox{margin-top:8px;min-height:44px;font-size:15px}
+.tl{position:relative;height:12px;border-radius:99px;background:var(--leafbg);margin:10px 0 6px;overflow:hidden}
+.tl i{position:absolute;top:0;bottom:0;background:var(--sun);opacity:.75}
+.tl i.me{background:var(--hi);opacity:1}
+.tl i.past{left:0;background:var(--line);opacity:1}
+.bks{display:grid;gap:2px}
+.bks .meta{margin-top:0}
+.linkbtn{border:0;background:none;padding:0;color:var(--hi);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline}
+.mybk{padding:6px 0;border-bottom:1px solid var(--line)}
+.mvote{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:10px}
+.mvote .chip{min-height:36px;padding:4px 12px}
+.mcomment{display:flex;gap:6px;width:100%}
+.mcomment input{min-height:40px}
+.notif{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.comments{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--mut)}
+.foot a{color:var(--hi)}
+@media(max-width:760px){.grid.listfirst>form{order:2}}

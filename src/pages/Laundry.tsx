@@ -7,11 +7,9 @@ import { useLive, useTick } from '../lib/useLive'
 import type { QueueRow, Washer } from '../lib/types'
 import { hhmm, local, saveLocal } from '../lib/util'
 import { Chips, ErrorNote } from '../components/Bits'
+import { washerState } from '../lib/washer'
+import { askNotify, notifyAllowed } from '../lib/notify'
 
-export function washerState(w: Washer | undefined, now = Date.now()): 'free' | 'busy' | 'broken' {
-  if (w?.status === 'broken') return 'broken'
-  return w?.ends_at && new Date(w.ends_at).getTime() > now ? 'busy' : 'free'
-}
 
 function Drum({ frac, color }: { frac: number; color: string }) {
   const R = 22, C = 2 * Math.PI * R
@@ -50,6 +48,8 @@ export function Laundry() {
     const t = Date.now()
     await run(supabase.from('washers').upsert({ id, hostel: h!.code, status: 'ok', started_at: new Date(t).toISOString(), ends_at: new Date(t + cycle * 60000).toISOString(), user_id: uid, updated_at: new Date(t).toISOString() }))
     await supabase.from('washer_queue').delete().eq('washer_id', id).eq('user_id', uid)
+    if (notifyAllowed()) toast(`Started. We’ll notify you at ${hhmm(t + cycle * 60000)} while Campus Hub is open.`)
+    else if (await askNotify()) toast(`Started. You’ll get a notification at ${hhmm(t + cycle * 60000)}.`)
   }
   const ensure = (id: string) => supabase.from('washers').upsert({ id, hostel: h!.code }, { onConflict: 'id', ignoreDuplicates: true })
 

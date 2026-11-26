@@ -2,6 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Session } from '@supabase/supabase-js'
 import { supabase, configured } from './supabase'
 import type { Profile } from './types'
+import { local, saveLocal } from './util'
+
+const meKey = (uid: string) => 'hub.me.' + uid
+
+/** Removes everything this app cached on the device (used on sign-out). */
+export function clearLocalCache() {
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith('hub.me.') || k === 'hub.ref') localStorage.removeItem(k)
+  } catch { /* storage unavailable */ }
+}
 
 interface AuthState {
   session: Session | null
@@ -28,12 +38,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     const uid = s.user.id
-    const [{ data: p }, { data: a }] = await Promise.all([
+    // Show the app straight away from the last known profile, then refresh it.
+    const cached = local<{ profile: Profile | null; isAdmin: boolean } | null>(meKey(uid), null)
+    if (cached?.profile) {
+      setProfile(cached.profile)
+      setIsAdmin(cached.isAdmin)
+      setReady(true)
+    }
+    const [{ data: p, error: pe }, { data: a }] = await Promise.all([
       supabase.from('profiles').select('id,name,phone,year,section,hostel').eq('id', uid).maybeSingle(),
       supabase.from('admins').select('user_id').eq('user_id', uid).maybeSingle(),
     ])
+    if (pe && cached?.profile) return // offline: keep the cached profile
     setProfile((p as Profile) || null)
     setIsAdmin(!!a)
+    if (p) saveLocal(meKey(uid), { profile: p, isAdmin: !!a })
     setReady(true)
   }, [])
 
@@ -45,7 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)
-      load(s)
+      // Supabase can deadlock if its own methods run inside this callback, so defer.
+      setTimeout(() => load(s), 0)
     })
     return () => sub.subscription.unsubscribe()
   }, [load])
@@ -57,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ready,
     reloadProfile: () => load(session),
     signOut: async () => {
+      clearLocalCache()
       await supabase.auth.signOut()
     },
   }

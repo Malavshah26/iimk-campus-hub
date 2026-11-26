@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { explain } from '../lib/supabase'
 
 export const Empty = ({ children }: { children: ReactNode }) => <div className="empty">{children}</div>
 
@@ -25,4 +26,7 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
 }
 
 export const Loading = () => <div className="empty">Loading…</div>
-export const ErrorNote = ({ error }: { error: string | null }) => (error ? <div className="status show">Couldn’t load: {error}</div> : null)
+export const ErrorNote = ({ error }: { error: string | null }) => (error ? <div className="status show">Couldn’t load: {explain(error)}</div> : null)
+
+/** Small count badge, e.g. unread notices. */
+export const Badge = ({ n }: { n: number }) => (n > 0 ? <span className="badge" aria-label={`${n} new`}>{n > 9 ? '9+' : n}</span> : null)

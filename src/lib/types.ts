@@ -96,3 +96,71 @@ export interface MealTime { meal: 'b' | 'l' | 's' | 'd'; label: string; starts: 
 export interface MenuRow { day: string; meal: string; items: string }
 export interface Contact { id: number; grp: string; name: string; number: string; note: string | null; emergency: boolean; sort: number }
 export interface AttendanceRow { key: string; course_code: string; status: 'y' | 'n' }
+
+export interface Notice {
+  id: string
+  title: string
+  body: string | null
+  link: string | null
+  pinned: boolean
+  expires_on: string | null
+  created_at: string
+}
+
+export interface CampusEvent {
+  id: string
+  user_id: string
+  title: string
+  organiser: string | null
+  venue: string | null
+  event_date: string
+  starts: string
+  ends: string
+  description: string | null
+  link: string | null
+  created_at: string
+  poster: Person | null
+  event_rsvps: { user_id: string }[]
+}
+
+export type ComplaintStatus = 'open' | 'progress' | 'fixed'
+export interface Complaint {
+  id: string
+  user_id: string
+  category: string
+  hostel: string | null
+  title: string
+  details: string | null
+  photo_path: string | null
+  status: ComplaintStatus
+  response: string | null
+  created_at: string
+  updated_at: string
+  poster: Person | null
+  complaint_votes: { user_id: string }[]
+}
+
+export interface Facility {
+  id: number
+  name: string
+  kind: string
+  location: string | null
+  opens: string
+  closes: string
+  max_minutes: number
+  active: boolean
+  sort: number
+}
+
+export interface Booking {
+  id: string
+  facility_id: number
+  user_id: string
+  day: string
+  starts: string
+  ends: string
+  purpose: string | null
+  who: { name: string; phone: string | null } | null
+}
+
+export interface MealSummary { day: string; meal: string; up: number; down: number; comments: string[] | null }

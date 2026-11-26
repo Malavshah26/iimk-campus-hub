@@ -2,24 +2,30 @@
 
 About 30 minutes. You need: a GitHub account (this repository), a free [Supabase](https://supabase.com) account and a free [Vercel](https://vercel.com) account. Use a shared Students' Council email for Supabase and Vercel if you can, so the next council can take over.
 
+> **Already set up before update 2?** Only do this: Supabase → **SQL Editor → New query**, paste the whole of
+> `supabase/migrations/0002_campus_life.sql`, click **Run**. That adds Notices, Events, Complaints, Mess feedback,
+> Room booking and the admin tools. Until it's run, those tabs say they need the database update; everything else keeps working.
+
 ---
 
 ## 1. Create the Supabase project
 
-1. Sign in at supabase.com → **New project**.
-2. Name: `campus-hub`. Set a strong database password and save it somewhere safe (council password manager).
-3. Region: **Mumbai (ap-south-1)**, closest to campus.
-4. Wait a minute or two for it to finish.
+1. Sign in at supabase.com. If asked, create an **organization** first: name it after the council (e.g. `IIMK Students Council`), type **Educational** or **Personal**, plan **Free**.
+2. **New project**. Name: `campus-hub`. Click **Generate a password**, copy it somewhere safe (council password manager). The app itself never needs it.
+3. Region: click **Need a specific region?** and pick **South Asia (Mumbai)**. Don't leave it on "Auto".
+4. Under **Data access**, tick all three boxes (Data API, *Grant API access to new tables automatically*, *Enable RLS on new tables automatically*). The SQL in step 2 also grants access itself, so the app works even if you missed one.
+5. Click **Create new project** and wait a minute or two.
 
 ## 2. Create the database
 
-In the Supabase dashboard open **SQL Editor → New query**, then run these three files from this repository, **in this order** (paste the whole file, click **Run**):
+In the Supabase dashboard open **SQL Editor → New query**, then run these files from this repository, **in this order** (open the file, select all, copy, paste the whole file, click **Run**; use a new query for each):
 
 1. `supabase/migrations/0001_init.sql`: tables, access rules, photo storage
-2. `supabase/seed.sql`: hostels, class timings, sample menu, bus times and contacts
-3. `supabase/seed_timetable.sql`: a **sample** timetable for every section
+2. `supabase/migrations/0002_campus_life.sql`: notices, events, complaints, mess feedback, room booking, admin tools
+3. `supabase/seed.sql`: hostels, class timings, sample menu, bus times and contacts
+4. `supabase/seed_timetable.sql`: a **sample** timetable for every section
 
-Each should finish with "Success. No rows returned".
+Each should finish with "Success. No rows returned". Running a file twice is harmless for 0002 and the seeds.
 
 ## 3. Check the email domain
 
@@ -32,83 +38,108 @@ update public.settings set value = 'your-domain.ac.in' where key = 'allowed_emai
 
 and the `VITE_ALLOWED_EMAIL_DOMAIN` setting in step 5.
 
-## 4. Set up sign-in emails
+## 4. Sign-in emails
 
-Students sign in with a code sent to their IIMK email.
+Students get an email with a sign-in link. This works out of the box for testing. **Before launch**, do both of these:
 
-1. **Authentication → Sign In / Providers → Email**: make sure Email is enabled.
-2. **Authentication → Emails → Templates → Magic Link**: add the code to the email so people can type it (useful inside in-app browsers). For example:
+1. **Connect a real email sender.** Supabase's built-in sender only allows a few emails per hour, which is fine for a handful of testers and not for a batch of students. Under **Authentication → Emails → SMTP Settings**, connect one:
+   - the institute's mail server (ask the Computer Centre; mail from an `iimk.ac.in` address is least likely to land in spam), or
+   - a free service such as **Brevo** (300 emails/day) or **Resend** (needs a domain you control).
+2. **Add a typeable code to the emails.** Supabase only lets you edit email templates *after* SMTP is connected. Then open **Authentication → Emails → Templates** and change **both** templates:
+   - **Magic Link** (returning students)
+   - **Confirm signup** (a student's very first sign-in)
+
+   Subject: `Your Campus Hub sign-in code`. Body:
 
    ```html
    <h2>Your Campus Hub sign-in</h2>
    <p>Your code is <b>{{ .Token }}</b></p>
    <p>Or <a href="{{ .ConfirmationURL }}">tap here to sign in</a>.</p>
    ```
-3. **Before launch:** Supabase's built-in email sender is only meant for testing and has low sending limits. Under **Authentication → Emails → SMTP Settings**, connect a real sender (the institute's mail server, or a service such as Resend, Brevo or Amazon SES). Ask the Computer Centre which they prefer.
+
+   The code matters on campus: some email security scanners "click" links before the student does, which uses the link up ("Email link is invalid or has expired"). A code can't be used up that way. The app's sign-in screen accepts either.
 
 ## 5. Put the site online with Vercel
 
-1. In Supabase open **Project Settings → API** (or **API Keys**) and copy:
-   - **Project URL** (looks like `https://abcd1234.supabase.co`)
-   - **anon / publishable key** (the public one, **not** the `service_role` / secret key)
-2. Sign in at vercel.com with GitHub → **Add New → Project** → import `iimk-campus-hub`.
+1. In Supabase copy two values:
+   - **Project URL**: **Project Settings → Data API** (also under the **Connect** button). Looks like `https://abcdefghijkl.supabase.co`. Copy only that, **without** `/rest/v1` on the end.
+   - **Publishable key**: **Project Settings → API Keys**, starts with `sb_publishable_`. (Older projects: the **anon / public** key under *Legacy API keys*.)
+   - Never use the **secret** (`sb_secret_…`) or **service_role** key anywhere in the website, Vercel or GitHub.
+2. Sign in at vercel.com with GitHub → **Add New → Project** → **Import** `iimk-campus-hub`.
 3. Framework preset: **Vite** (detected automatically).
 4. Open **Environment Variables** and add:
 
    | Name | Value |
    |---|---|
    | `VITE_SUPABASE_URL` | your Project URL |
-   | `VITE_SUPABASE_ANON_KEY` | your anon / publishable key |
+   | `VITE_SUPABASE_ANON_KEY` | your publishable key (the name says ANON; that's fine) |
    | `VITE_ALLOWED_EMAIL_DOMAIN` | `iimk.ac.in` |
 
-5. Click **Deploy**. You'll get an address like `https://iimk-campus-hub.vercel.app`.
-6. Back in Supabase, **Authentication → URL Configuration**:
-   - **Site URL:** your Vercel address
-   - **Redirect URLs:** add your Vercel address (and `http://localhost:5173` for local testing)
+5. Under **Optional Integrations** Vercel may offer to add **Supabase**: **skip it**. It would create a second, empty database.
+6. Click **Deploy**. You'll get an address like `https://iimk-campus-hub.vercel.app`.
+7. Back in Supabase, **Authentication → URL Configuration**:
+   - **Site URL:** your Vercel address, e.g. `https://iimk-campus-hub.vercel.app` (no `/` at the end)
+   - **Redirect URLs → Add URL:** `https://iimk-campus-hub.vercel.app/**` and, for local testing, `http://localhost:5173/**`
 
-Open the site, sign in with your IIMK email, and fill in your profile.
+   If you skip this, sign-in links send people to `localhost:3000` ("This site can't be reached").
 
-## 6. Make yourself (and other council members) admin
+Open the site, sign in with your IIMK email, and fill in your profile. Every push to GitHub's `main` branch redeploys automatically.
 
-After you've signed in once, run in the SQL Editor:
+## 6. Make yourself admin (once)
+
+After you've signed in once, run this one time in the SQL Editor:
 
 ```sql
 insert into public.admins (user_id)
 select id from auth.users where email = 'yourname@iimk.ac.in';
 ```
 
-Reload the site: an **Admin** button appears in the header. Repeat for each council member who should edit timetables and other data. To remove someone: `delete from public.admins where user_id = (select id from auth.users where email = '...');`
+Reload the site: an **Admin** button appears in the header. From now on, add or remove other council members in the app: **Admin → Admins** (they need to have signed in once). The app won't let you remove the last admin.
 
 ## 7. Replace the sample data
 
 On the **Admin** page:
 
-- **Timetable:** pick year and section, fill code/course/room per class, **Save**. (Or ask a developer to load the official timetable via SQL.)
+- **Timetable:** easiest is a spreadsheet. Make columns **Year, Section, Day, Period, Code, Course, Room** (Period = 1–6 or a start time like 09:15), copy the rows, paste them into **Import from a spreadsheet**, check the preview, **Import**. *Download current timetable (CSV)* gives you a starting file. You can also edit one section at a time in the grid.
 - **Mess menu**, **Bus**, **Contacts:** replace placeholders. Campus numbers starting `90000` are fake.
 - **Hostels:** set the real number of washing machines in each hostel.
+- **Facilities:** the rooms and courts students can book. The six listed are samples: rename, add, or untick *Bookable*.
 - **Class timings:** already set to 09:15 start, 75-minute classes, 20-minute breaks, lunch 13:40–14:40.
 
-## 8. Optional extras
+## 8. Keeping it running
 
-**Your own address (e.g. `hub.iimk.ac.in`):** In Vercel → Project → Settings → Domains, add the domain. Vercel shows a DNS record (usually a CNAME); the Computer Centre adds it. Then update the Site URL and Redirect URLs in Supabase (step 5.6).
+**The free database pauses after about a week with no use** (e.g. vacations). This repository includes a daily keep-alive: Vercel calls `/api/keepalive` every morning (set in `vercel.json`), which pings the database. It needs no setup; check it's listed under Vercel → Project → **Settings → Cron Jobs**. If the project pauses anyway, open the Supabase dashboard and click **Restore project** (data is kept; don't leave it paused for months).
+
+**Space:** the free plan allows 500 MB of data and 1 GB of photos. **Admin → Usage & clean-up** shows how much is used and removes old finished posts (returned items, sold listings, fixed complaints, past rides/events/bookings) with their photos. Do it at the end of each term.
+
+**Paid plan:** Supabase Pro (about $25/month) never pauses, adds daily backups and much more space. This is what the hosting-fee request in the proposal covers.
+
+## 9. Optional extras
+
+**Your own address (e.g. `hub.iimk.ac.in`):** In Vercel → Project → Settings → Domains, add the domain. Vercel shows a DNS record (usually a CNAME); the Computer Centre adds it. Then update the Site URL and Redirect URLs in Supabase (step 5.7).
 
 **"Continue with Google" button:** only if IIMK email runs on Google Workspace. Create an OAuth client in Google Cloud Console, enable the Google provider in Supabase (Authentication → Sign In / Providers → Google), then add `VITE_ENABLE_GOOGLE_LOGIN=true` in Vercel and redeploy. The database still blocks non-IIMK emails either way.
 
-**Keep the free plan from sleeping:** free Supabase projects pause after a week with no activity (e.g. vacations). The paid Pro plan doesn't pause and adds daily backups; this is what the hosting-fee request in the proposal covers.
+**Install on phones:** students can open the site in Chrome/Safari and choose **Add to Home screen**. It then opens like an app, works offline for the timetable, menu, bus and contacts, and can show notifications (turn them on in **Profile**).
 
 ## Handing over to the next council
 
 - **GitHub:** Settings → Transfer ownership to a council/institute account (history is kept), or add the new team as collaborators.
 - **Supabase / Vercel:** invite the new members to the organisation/team, then remove old ones.
-- Add new admins (step 6).
+- Add the new admins in **Admin → Admins**, then remove the old ones.
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| "Almost there" screen | Environment variables missing in Vercel. Add them (step 5) and redeploy. |
-| Sign-in email never arrives | Check spam; set up SMTP (step 4.3); check Authentication → Logs. |
+| "Almost there" screen | Environment variables missing in Vercel. Add them (step 5) and **Redeploy**. |
+| Sign-in link opens `localhost:3000` / "can't be reached" | Set Site URL and Redirect URLs (step 5.7), then send a new email. |
+| "Email link is invalid or has expired" | Each link works once and only the newest email's link works. Send a new one. If fresh links keep failing, a mail scanner is using them up: set up SMTP and the code template (step 4). |
+| "Set up custom SMTP to edit the source" | Expected: templates unlock after step 4.1. |
+| Sign-in email never arrives / "rate limit" | Check spam; set up SMTP (step 4.1); check Authentication → Logs. |
 | "Use your @iimk.ac.in email" | Wrong domain; see step 3. |
-| Tapping the email link opens a blank page | Add your site address to Redirect URLs (step 5.6), or type the code instead. |
+| A tab says it "needs the latest database update" | Run `supabase/migrations/0002_campus_life.sql` (step 2). |
 | Data loads but posting fails | Make sure step 2 ran fully, in order. |
+| Site works but shows no data at all, project dashboard says *Paused* | Click **Restore project** in Supabase (section 8). |
 | Photo picker doesn't open inside an app | Open the site in Chrome/Safari, or paste the photo into the paste box. |
+| No notifications | Profile → Turn on notifications. They arrive while Campus Hub is open (a background tab or the installed app is enough); there's no push server. |
