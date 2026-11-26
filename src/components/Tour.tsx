@@ -6,14 +6,14 @@ import { sectionLabel } from '../lib/util'
 import { CalendarSync } from './CalendarSync'
 import { BirthdayField } from './Birthday'
 
+// Mirrors the main headers in App.tsx.
 const FEATURES: [string, string][] = [
   ['Classes', 'your sessions, rooms and attendance in one tap'],
-  ['Mess menu', 'today’s meals; rate them for the mess committee'],
-  ['Transport', 'campus shuttle times and auto drivers’ numbers'],
-  ['Notices & polls', 'council news, and votes on decisions and elections'],
-  ['Events', 'what’s on, with clashes against your classes'],
-  ['Laundry', 'free washing machines in your hostel'],
-  ['Carpool · Book a room · Lost & found · Buy & sell · Complaints · Contacts', ''],
+  ['Updates', 'council notices, polls & elections, events'],
+  ['Mess & laundry', 'today’s meals (rate them), free washing machines'],
+  ['Transport', 'shuttle times, auto drivers’ numbers, carpools'],
+  ['Market', 'buy & sell, lost & found'],
+  ['Campus', 'book a room or court, complaints, important contacts'],
 ]
 
 /** First-run intro: what's here, check profile (+ birthday), sync calendar, turn on notifications. */

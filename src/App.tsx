@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { AuthProvider, useAuth, useMe } from './lib/auth'
 import { RefProvider, useRef_ } from './lib/ref'
 import { configured, supabase } from './lib/supabase'
@@ -29,6 +29,7 @@ const LostFound = page(() => import('./pages/LostFound'), 'LostFound')
 const Market = page(() => import('./pages/Market'), 'Market')
 const Laundry = page(() => import('./pages/Laundry'), 'Laundry')
 const Bus = page(() => import('./pages/Info'), 'Bus')
+const Autos = page(() => import('./pages/Info'), 'Autos')
 const Mess = page(() => import('./pages/Info'), 'Mess')
 const Contacts = page(() => import('./pages/Info'), 'Contacts')
 const Admin = page(() => import('./pages/Admin'), 'Admin')
@@ -39,13 +40,19 @@ const Book = page(() => import('./pages/Book'), 'Book')
 const Polls = page(() => import('./pages/Polls'), 'Polls')
 const Tour = page(() => import('./components/Tour'), 'Tour')
 
-const TABS = [
-  ['classes', 'Classes'], ['notices', 'Notices'], ['polls', 'Polls'], ['events', 'Events'], ['mess', 'Mess menu'], ['bus', 'Transport'],
-  ['laundry', 'Laundry'], ['rides', 'Carpool'], ['book', 'Book a room'], ['lost', 'Lost & found'],
-  ['market', 'Buy & sell'], ['complaints', 'Complaints'], ['contacts', 'Contacts'],
+// Main headers, each with its tabs. Each tab keeps its own #address, so old links and the home tiles still work.
+const GROUPS = [
+  { key: 'classes', label: 'Classes', tabs: [['classes', 'Classes']] },
+  { key: 'updates', label: 'Updates', tabs: [['notices', 'Notices'], ['polls', 'Polls'], ['events', 'Events']] },
+  { key: 'food', label: 'Mess & laundry', tabs: [['mess', 'Mess menu'], ['laundry', 'Laundry']] },
+  { key: 'transport', label: 'Transport', tabs: [['bus', 'Shuttle'], ['autos', 'Autos & taxis'], ['rides', 'Carpool']] },
+  { key: 'market', label: 'Market', tabs: [['market', 'Buy & sell'], ['lost', 'Lost & found']] },
+  { key: 'campus', label: 'Campus', tabs: [['book', 'Book a room'], ['complaints', 'Complaints'], ['contacts', 'Contacts']] },
 ] as const
-type Route = (typeof TABS)[number][0] | 'profile' | 'admin' | 'autos'
-const ROUTES = new Set<string>([...TABS.map(t => t[0]), 'profile', 'admin', 'autos'])
+type Group = (typeof GROUPS)[number]
+type Route = Group['tabs'][number][0] | 'profile' | 'admin'
+const ROUTES = new Set<string>([...GROUPS.flatMap(g => g.tabs.map(t => t[0])), 'profile', 'admin'])
+const groupOf = (r: string) => GROUPS.find(g => g.tabs.some(t => t[0] === r))
 const tourKey = (uid: string) => 'hub.tour.' + uid
 
 function useRoute(): Route {
@@ -55,7 +62,14 @@ function useRoute(): Route {
   }
   const [r, setR] = useState<Route>(get)
   useEffect(() => {
-    const on = () => { setR(get()); window.scrollTo({ top: 0 }) }
+    const on = () => {
+      const next = get()
+      setR(next)
+      window.scrollTo({ top: 0 })
+      // Remember the last tab in each header, so tapping the header goes back to it.
+      const g = groupOf(next)
+      if (g) saveLocal('hub.lastTab', { ...local<Record<string, string>>('hub.lastTab', {}), [g.key]: next })
+    }
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
   }, [])
@@ -115,6 +129,33 @@ function PinnedBanner({ notices, route }: { notices: Notice[]; route: Route }) {
   )
 }
 
+function MainNav({ route, badges }: { route: Route; badges: Partial<Record<Route, number>> }) {
+  const cur = groupOf(route)
+  const last = local<Record<string, string>>('hub.lastTab', {})
+  const target = (g: Group) => {
+    const l = last[g.key]
+    return g.tabs.some(t => t[0] === l) ? l : g.tabs[0][0]
+  }
+  const sum = (g: Group) => g.tabs.reduce((n, t) => n + (badges[t[0]] || 0), 0)
+  // On phones the header row scrolls sideways: keep the current header visible.
+  const row = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const r = row.current, a = r?.querySelector<HTMLElement>('a.on')
+    if (!r || !a) return
+    const rb = r.getBoundingClientRect(), ab = a.getBoundingClientRect()
+    if (ab.left < rb.left || ab.right > rb.right) r.scrollBy({ left: ab.left - rb.left - 16 })
+  }, [cur?.key])
+  return (
+    <nav aria-label="Sections">
+      <div className="wrap tabs" ref={row}>{GROUPS.map(g => <a key={g.key} href={'#' + target(g)} className={g === cur ? 'on' : ''} aria-current={g === cur ? 'true' : undefined}>
+        {g.label}<Badge n={g === cur && g.tabs.length > 1 ? 0 : sum(g)} /></a>)}</div>
+      {cur && cur.tabs.length > 1 && <div className="wrap subtabs" role="tablist" aria-label={cur.label}>
+        {cur.tabs.map(([k, t]) => <a key={k} href={'#' + k} role="tab" aria-selected={route === k} className={route === k ? 'on' : ''}>{t}<Badge n={badges[k] || 0} /></a>)}
+      </div>}
+    </nav>
+  )
+}
+
 function Shell() {
   const route = useRoute()
   const { uid, profile, isAdmin } = useMe()
@@ -156,7 +197,7 @@ function Shell() {
           {!loading && <NowBoard />}
         </div>
       </header>
-      <nav><div className="wrap tabs">{TABS.map(([k, t]) => <a key={k} href={'#' + k} className={route === k || (k === 'bus' && route === 'autos') ? 'on' : ''} aria-current={route === k ? 'page' : undefined}>{t}{k === 'notices' && <Badge n={unseen} />}{k === 'polls' && <Badge n={unvoted} />}</a>)}</div></nav>
+      <MainNav route={route} badges={{ notices: unseen, polls: unvoted }} />
       <main className="wrap">
         {!online && <div className="status show">You’re offline. Showing the timetable, menu and bus times saved on this device.</div>}
         {online && error && (haveData
@@ -174,7 +215,7 @@ function Shell() {
           {route === 'market' && <Market />}
           {route === 'laundry' && <Laundry />}
           {route === 'bus' && <Bus />}
-          {route === 'autos' && <Bus start="autos" />}
+          {route === 'autos' && <Autos />}
           {route === 'polls' && <Polls />}
           {route === 'mess' && <Mess />}
           {route === 'complaints' && <Complaints />}

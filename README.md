@@ -2,6 +2,8 @@
 
 One web app for everyday campus life at IIM Kozhikode, run by the Students' Council.
 
+Six main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls, Events) · **Mess & laundry** · **Transport** (Shuttle, Autos & taxis, Carpool) · **Market** (Buy & sell, Lost & found) · **Campus** (Book a room, Complaints, Contacts).
+
 | Tab | What it does |
 |---|---|
 | **Classes** | Section-wise timetable (A–H, LSM, FIN; Year 1 and 2) or **your own Google Calendar** (secret iCal link, kept on your device), private attendance with course-wise %, “can miss N more” at 75%, and **Compare people** to find common free slots |
@@ -9,7 +11,8 @@ One web app for everyday campus life at IIM Kozhikode, run by the Students' Coun
 | **Polls** | Council quick polls (change your vote until it closes) and **elections** with a secret ballot: one final vote each, nobody can link a vote to a person, results only after closing. For everyone, one year or one section |
 | **Events** | Anyone can post club events and talks; flags clashes with other events and with *your* classes, shows organisers which sections have class at that time; “I’m going”, Google Calendar / .ics |
 | **Mess menu** | Weekly menu with what’s on now; 👍/👎 per meal (totals for all, comments only for the council) |
-| **Transport** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): pick your stop and destination, next shuttle highlighted; **auto and taxi drivers** with Call / WhatsApp; city buses if any |
+| **Shuttle** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): pick your stop and destination, next shuttle highlighted; city buses if any |
+| **Autos & taxis** | Auto and taxi drivers who serve campus, with Call / WhatsApp / Copy |
 | **Laundry** | Live washing-machine status for all 17 hostels, queues, fault reports, “wash done” notification |
 | **Carpool** | Post where and when you’re going; see rides going the same way, with Google Maps directions |
 | **Book a room** | Discussion rooms and courts: day view, tap a free slot, no double bookings, fair-use limits |

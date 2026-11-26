@@ -5,7 +5,9 @@ Junior Students' Council (owner: Malav Shah, GitHub Malavshah26). It started as 
 prototype in a claude.ai chat and was rebuilt here as a real app.
 
 ## Stack
-- React 19 + TypeScript + Vite, static site (deploy on Vercel). Hash routing (`#classes`, `#rides`, ...).
+- React 19 + TypeScript + Vite, static site (deploy on Vercel). Hash routing (`#classes`, `#rides`, ...). Navigation =
+  `GROUPS` in `App.tsx`: six main headers (Classes, Updates, Mess & laundry, Transport, Market, Campus), each with
+  sub-tabs that keep their own `#route`; a header opens its last-used tab (`hub.lastTab`). Group badges sum the tabs'.
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
 - No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life, 0003 shuttle,
   0004 section sessions, 0005 contact emails, 0006 polls + birthdays). New
@@ -69,7 +71,7 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   and in the intro.
 - First-run intro (`src/components/Tour.tsx`, lazy): welcome → profile check + birthday → calendar sync → notifications.
   Shown once per user (`hub.tour.<uid>`); Profile → "Show the intro again" dispatches `hub:tour`.
-- Transport (`#bus` tab, `#autos` opens the autos part): shuttle | Autos & taxis | city bus. Auto/taxi drivers are
+- Transport header: `#bus` (Shuttle, plus city buses below it if any), `#autos` (Autos & taxis), `#rides` (Carpool). Auto/taxi drivers are
   `contacts` rows in group `AUTO_GROUP` ('Autos & taxis', `src/lib/autos.ts`), pasted in Admin → Transport
   (`parseAutos()`); Contacts hides that group unless searching. The repo is public, so drivers' numbers are entered in
   the app, never committed (no real names/numbers in code, tests or comments).

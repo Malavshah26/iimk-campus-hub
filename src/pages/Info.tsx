@@ -8,39 +8,26 @@ import { MealVote, useMealFeedback } from '../components/MealFeedback'
 import { AUTO_GROUP, waMobile } from '../lib/autos'
 import type { Contact } from '../lib/types'
 
-type Part = 'shuttle' | 'autos' | 'city'
-
-/** Transport: campus shuttle, auto/taxi drivers, city buses (each shown only if there's data, autos always). */
-export function Bus({ start }: { start?: Part }) {
+/** Transport → Shuttle: the campus shuttle, then city buses if the council has added any. */
+export function Bus() {
   const { ref } = useRef_()
-  const parts: [Part, string][] = [
-    ...(ref.shuttle.length ? [['shuttle', 'Campus shuttle'] as [Part, string]] : []),
-    ['autos', 'Autos & taxis'],
-    ...(ref.bus.length ? [['city', 'City bus'] as [Part, string]] : []),
-  ]
-  const [part, setPartRaw] = useState<Part>(() => { const p = start || local<Part>('hub.transport', 'shuttle'); return parts.some(x => x[0] === p) ? p : parts[0][0] })
-  const setPart = (p: Part) => { setPartRaw(p); saveLocal('hub.transport', p) }
-  const cur = parts.some(x => x[0] === part) ? part : parts[0][0]
-  return <section>
-    {parts.length > 1 && <Chips label="Transport" value={cur} onChange={setPart} options={parts} />}
-    {cur === 'shuttle' && <Shuttle />}
-    {cur === 'autos' && <Autos />}
-    {cur === 'city' && <CityBus />}
-  </section>
+  if (!ref.shuttle.length && !ref.bus.length) return <section><div className="hd"><h2>Shuttle</h2></div><Empty>No bus timings yet. Council admins add them in Admin → Transport.</Empty></section>
+  return <section>{ref.shuttle.length > 0 && <Shuttle />}{ref.bus.length > 0 && <CityBus />}</section>
 }
 
-function Autos() {
+/** Transport → Autos & taxis. */
+export function Autos() {
   const { ref } = useRef_()
   const list = ref.contacts.filter(c => c.grp === AUTO_GROUP)
   const [copied, setCopied] = useState('')
   return (
-    <div>
+    <section>
       <div className="hd"><div><h2>Autos & taxis</h2><p className="sub">Drivers who take students to and from campus. Call or WhatsApp them; agree the fare before you set off.</p></div></div>
       {list.length ? <div className="ctc">
         {list.map(c => <PhoneCard key={c.id} c={c} copied={copied} onCopy={n => { setCopied(n); setTimeout(() => setCopied(''), 1500) }} wa />)}
       </div> : <Empty>No auto or taxi numbers yet. Council admins add them in Admin → Transport.</Empty>}
       <p className="note">Going the same way as others? Post it in <a href="#rides">Carpool</a> and split the fare.</p>
-    </div>
+    </section>
   )
 }
 
