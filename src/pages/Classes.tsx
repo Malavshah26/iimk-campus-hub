@@ -84,6 +84,16 @@ function MyTimetable() {
     if (error) { toast('Couldn’t save attendance: ' + error.message); setAtt(att) }
   }
 
+  /** Deletes all of this student's marks for one subject (e.g. old or wrong ones). */
+  const clearCourse = async (code: string, n: number) => {
+    if (!confirm(`Delete your ${n} attendance mark${n === 1 ? '' : 's'} for ${code}? This can’t be undone.`)) return
+    const keys = Object.values(att).filter(r => r.course_code === code && r.key.startsWith(prefix)).map(r => r.key)
+    const { error } = await supabase.from('attendance').delete().in('key', keys)
+    if (error) return toast('Couldn’t clear: ' + error.message)
+    setAtt(Object.fromEntries(Object.entries(att).filter(([k]) => !keys.includes(k))))
+    toast(`Cleared ${code}.`)
+  }
+
   const agg = useMemo(() => {
     const a: Record<string, { y: number; t: number }> = {}
     for (const r of Object.values(att)) {
@@ -158,7 +168,7 @@ function MyTimetable() {
             return <div className="crow" key={code}>
               <div className="ch"><span>{courseNames.get(code) || code}</span><b>{x.y}/{x.t} · {p}%</b></div>
               <div className="bar"><i className={p < 75 ? 'low' : ''} style={{ width: p + '%' }} /></div>
-              <div className="meta">{skipLine(x)}</div>
+              <div className="ch"><span className="meta">{skipLine(x)}</span><button className="linkbtn small" type="button" onClick={() => clearCourse(code, x.t)} aria-label={`Clear attendance for ${code}`}>clear</button></div>
             </div>
           })}
           <p className="note">Below 75% shows in red. “Can miss” counts how many more classes you could skip and stay at 75% or above.</p>

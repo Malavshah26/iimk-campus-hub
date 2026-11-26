@@ -252,3 +252,4 @@ table.shtable td{font-size:14px;padding:4px 6px;border-bottom:1px solid var(--li
 .calset{margin:0 0 14px}
 .calset .steps{font-size:14.5px}
 .calset a{color:var(--hi)}
+.linkbtn.small{font-size:13px;color:var(--mut);margin-top:4px}
