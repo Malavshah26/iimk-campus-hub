@@ -112,6 +112,12 @@ export function Notifier() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notices' }, ({ new: n }) => {
         alertRef.current('New notice', (n as { title: string }).title, 'notice')
       })
+      // Realtime only delivers polls this student can see (row-level security), i.e. ones meant for them.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'polls' }, ({ new: p }) => {
+        const row = p as { id: string; title: string; secret: boolean; created_by: string | null }
+        if (row.created_by === uid) return
+        alertRef.current(row.secret ? 'Election open' : 'New poll', `${row.title}. Vote in Campus Hub → Polls.`, 'poll' + row.id)
+      })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [uid])

@@ -25,7 +25,7 @@ export function isAllowedEmail(email: string): boolean {
 export function explain(msg: string | null | undefined): string {
   const m = String(msg || '')
   if (/does not exist|schema cache|Could not find the (table|function)/i.test(m))
-    return 'This part needs the latest database update. A council admin should run supabase/migrations/0002_campus_life.sql in the Supabase SQL Editor (see docs/SETUP.md).'
+    return 'This part needs the latest database update. A council admin should run the newest files in supabase/migrations/ in the Supabase SQL Editor (see docs/SETUP.md).'
   if (/JWT expired|invalid JWT|refresh token/i.test(m)) return 'Your sign-in has expired. Reload the page, or sign out and in again.'
   if (/Failed to fetch|NetworkError|Load failed|network request failed/i.test(m)) return 'No connection right now. Check your Wi-Fi or data and try again.'
   if (/row-level security|permission denied/i.test(m)) return 'You don’t have permission to do that.'

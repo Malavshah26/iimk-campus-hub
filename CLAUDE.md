@@ -7,7 +7,8 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 ## Stack
 - React 19 + TypeScript + Vite, static site (deploy on Vercel). Hash routing (`#classes`, `#rides`, ...).
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
-- No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life). New
+- No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life, 0003 shuttle,
+  0004 section sessions, 0005 contact emails, 0006 polls + birthdays). New
   schema changes go in a new numbered file that is safe to re-run (`if not exists`, `drop policy if exists`).
 - Server code (Vercel functions): `api/keepalive.js`, a daily cron calling `rpc/ping` so the free project doesn't
   pause; `api/ics.js`, which fetches a student's calendar .ics (campus JWT required, Google/Outlook hosts only).
@@ -41,7 +42,7 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   C1–C4, C6, MDC, ...). `src/lib/sessionTitle.ts` parses them so attendance groups by course code (EE, CMA, OS,
   CF, LEPM) and rooms show as "Room B1"; full course names come from the timetable table if an admin has entered
   matching codes. First connect auto-filters to "Session No" when the calendar has other events; Classes offers
-  to fix the profile section if it differs from the calendar's section. The owner is in Section C. The owner's classes live in his
+  to fix the profile section if it differs from the calendar's section. The owner is in Section C. The owner's classes live in their
   @iimk.ac.in Google account, not the personal Gmail connected to Claude.
 - Section timetables (0004 `section_sessions`): after a calendar sync, `useShareSessions` sends the student's
   own-section "Session No" sessions (today-7..+60 days) to `sync_section_sessions()`, which takes year/section from
@@ -56,6 +57,22 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 - Attendance: Classes has "Attended all / Missed all" for a day's unmarked classes; after the last class a banner
   (`AttendanceNudge`) offers one-tap marking; `Notifier` sends an evening reminder at the time set in Profile
   (`hub.attRemind`, default 21:00) if anything is unmarked. Helpers in `src/lib/attendance.ts`.
+- Polls (0006, `src/pages/Polls.tsx`, `src/lib/polls.ts`): created only via `poll_create()` (admins), voted only via
+  `poll_vote()`; audience = everyone / a year / a year+section (`poll_for_me()` in RLS). Quick polls: `poll_votes` row with
+  option_id, changeable, results after voting (admins always). Elections (`secret`): `poll_votes` row with option_id NULL
+  records *that* you voted, an unlinked `poll_ballots` row (no user, no time, no policies) records *what*; final; counts
+  from `poll_tally()` only after `closes_at`. `polls_guard` trigger: only `closes_at` may change, never after it passed.
+  `poll_voters()` gives admins names (not choices). The app remembers "you voted for X" only in `hub.ballots`. Tab badge =
+  open polls you can vote in and haven't (`useUnvotedPolls`, refreshed by the `hub:polls` window event).
+- Birthdays (0006 `birthdays`, `src/components/Birthday.tsx`): opt-in, month+day only, a row exists only if the student
+  added one; RLS lets only the same year+section read it (`same_section()`). Card under the Now tiles; field in Profile
+  and in the intro.
+- First-run intro (`src/components/Tour.tsx`, lazy): welcome → profile check + birthday → calendar sync → notifications.
+  Shown once per user (`hub.tour.<uid>`); Profile → "Show the intro again" dispatches `hub:tour`.
+- Transport (`#bus` tab, `#autos` opens the autos part): shuttle | Autos & taxis | city bus. Auto/taxi drivers are
+  `contacts` rows in group `AUTO_GROUP` ('Autos & taxis', `src/lib/autos.ts`), pasted in Admin → Transport
+  (`parseAutos()`); Contacts hides that group unless searching. The repo is public, so drivers' numbers are entered in
+  the app, never committed (no real names/numbers in code, tests or comments).
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
   open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables
@@ -75,7 +92,8 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   owner's request (2026-11-26); students use Google Calendar sync instead. Don't re-seed it.
 - Contacts: national helplines and the IIMK offices (Programmes, Admissions, Student Affairs & Hostel; given by the
   owner, added by migration 0005 with emails) are real. The fake `90000 ...` placeholders were removed. Security,
-  medical centre, mess office, computer centre, library numbers are still missing.
+  medical centre, mess office, computer centre, library numbers are still missing. The owner has the list of 11 auto/taxi
+  drivers; it goes in via Admin → Transport (not in the repo).
 - Meal timings (seed guesses) and washing machines per hostel
 - Facilities for booking (6 sample rooms/courts added by 0002)
 

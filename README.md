@@ -6,19 +6,20 @@ One web app for everyday campus life at IIM Kozhikode, run by the Students' Coun
 |---|---|
 | **Classes** | Section-wise timetable (A–H, LSM, FIN; Year 1 and 2) or **your own Google Calendar** (secret iCal link, kept on your device), private attendance with course-wise %, “can miss N more” at 75%, and **Compare people** to find common free slots |
 | **Notices** | Council announcements, pinned notices as a banner, unread badge |
+| **Polls** | Council quick polls (change your vote until it closes) and **elections** with a secret ballot: one final vote each, nobody can link a vote to a person, results only after closing. For everyone, one year or one section |
 | **Events** | Anyone can post club events and talks; flags clashes with other events and with *your* classes, shows organisers which sections have class at that time; “I’m going”, Google Calendar / .ics |
 | **Mess menu** | Weekly menu with what’s on now; 👍/👎 per meal (totals for all, comments only for the council) |
-| **Bus** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): pick your stop and destination, next shuttle highlighted; city buses if any |
+| **Transport** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): pick your stop and destination, next shuttle highlighted; **auto and taxi drivers** with Call / WhatsApp; city buses if any |
 | **Laundry** | Live washing-machine status for all 17 hostels, queues, fault reports, “wash done” notification |
 | **Carpool** | Post where and when you’re going; see rides going the same way, with Google Maps directions |
 | **Book a room** | Discussion rooms and courts: day view, tap a free slot, no double bookings, fair-use limits |
 | **Lost & found** | Post lost or found items with photos; contact on WhatsApp; mark returned |
 | **Buy & sell** | Sell, rent out or ask for books, cycles, coolers, room items, with photos |
 | **Complaints** | Hostel, Wi-Fi, mess… issues with “me too” votes; council sets open / in progress / fixed and replies |
-| **Contacts** | Emergency helplines and campus numbers, tap to call |
-| **Admin** | Timetable (incl. paste from Excel), mess menu and feedback, bus, contacts, hostels, facilities, class timings, admins, usage & clean-up |
+| **Contacts** | Emergency helplines and IIMK offices, tap to call or email |
+| **Admin** | Timetable (incl. paste from Excel), mess menu (Excel upload) and feedback, transport (shuttle sheet and auto list paste), contacts, hostels, facilities, class timings, admins, usage & clean-up |
 
-Also: works offline for timetable/menu/bus/contacts, installable on phones, in-app notifications (wash done, ride joined, complaint updated, new notice, event and booking reminders), and a daily keep-alive so the free database doesn’t pause.
+Also: a 4-step intro for new students (profile, calendar sync, notifications), opt-in birthdays shown to your own section on the home screen, works offline for timetable/menu/bus/contacts, installable on phones, in-app notifications (wash done, ride joined, complaint updated, new notice or poll, event and booking reminders, evening attendance reminder), and a daily keep-alive so the free database doesn’t pause.
 
 Only signed-in `@iimk.ac.in` accounts can see or post anything. This is enforced in the database (row-level security), not just in the app.
 

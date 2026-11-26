@@ -9,6 +9,7 @@ import { dayLabel, dstr, today } from '../lib/util'
 import { Empty, ErrorNote, Loading } from '../components/Bits'
 import { parseShuttle, showTime } from '../lib/shuttle'
 import { parseMenu, textToGrid, xlsxToGrid, type Grid } from '../lib/menuImport'
+import { AUTO_GROUP, parseAutos } from '../lib/autos'
 
 type Res = PromiseLike<{ error: { message: string } | null }>
 
@@ -322,6 +323,44 @@ export function ShuttleAdmin() {
           <button className="linkbtn" type="button" onClick={() => remove(t.id)}>remove</button>
         </div>)}</div>
       </details>
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- Autos & taxis */
+
+export function AutosAdmin() {
+  const { ref, reload } = useRef_()
+  const toast = useToast()
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const rows = parseAutos(text)
+  const current = ref.contacts.filter(c => c.grp === AUTO_GROUP)
+
+  const replace = async () => {
+    if (!rows.length || !confirm(`Replace the ${current.length} auto/taxi numbers with these ${rows.length}?`)) return
+    setBusy(true)
+    // Add the new list first, then remove the old rows, so a failed save never leaves the page empty.
+    const ins = await supabase.from('contacts').insert(rows.map((r, i) => ({ grp: AUTO_GROUP, name: r.name, number: r.number, note: r.note || null, emergency: false, sort: 200 + i })))
+    const del = ins.error || !current.length ? ins : await supabase.from('contacts').delete().in('id', current.map(c => c.id))
+    setBusy(false)
+    toast(del.error ? 'Error: ' + explain(del.error.message) : `Saved ${rows.length} auto/taxi numbers.`)
+    if (!del.error) setText('')
+    reload()
+  }
+
+  return (
+    <div className="panel" style={{ marginBottom: 24 }}>
+      <h3>Autos & taxis</h3>
+      <p className="note">Paste the drivers’ list, one per line with a name and number, e.g. straight from WhatsApp (“Ravi. +919800012345”). Headings without a number are skipped. Students see it in Transport → Autos &amp; taxis with Call and WhatsApp buttons. To fix one number, use Admin → Contacts (group “{AUTO_GROUP}”).</p>
+      <textarea aria-label="Pasted auto and taxi numbers" rows={6} style={{ marginTop: 10 }} value={text} onChange={e => setText(e.target.value)}
+        placeholder={'Ravi. +91 98000 12345\nAnil. +91 98000 12346'} />
+      {text.trim() && <>
+        <p className="note">{rows.length ? `${rows.length} drivers read. Check them, then save.` : 'No phone numbers found in that text.'}</p>
+        {rows.length > 0 && <ol className="note">{rows.map(r => <li key={r.number}><b>{r.name}</b> · {r.number}{r.note ? ` · ${r.note}` : ''}</li>)}</ol>}
+        <button className="btn pri inline" style={{ marginTop: 10 }} type="button" disabled={busy || !rows.length} onClick={replace}>{busy ? 'Saving…' : current.length ? `Replace the list with these ${rows.length}` : `Add these ${rows.length}`}</button>
+      </>}
+      {current.length > 0 && <p className="note">Now listed: {current.map(c => c.name).join(', ')}.</p>}
     </div>
   )
 }

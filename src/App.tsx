@@ -16,9 +16,12 @@ import { isLive, unseenCount, useNotices } from './lib/notices'
 import { Badge, Loading } from './components/Bits'
 import { Notifier } from './components/Notifier'
 import { AttendanceNudge } from './components/AttendanceNudge'
+import { BirthdayCard } from './components/Birthday'
+import { useUnvotedPolls } from './lib/polls'
 
 // Each tab is downloaded only when first opened, so the app starts faster on slow campus Wi-Fi.
-const page = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const page = <M extends Record<K, React.ComponentType<any>>, K extends keyof M & string>(load: () => Promise<M>, name: K) =>
   lazy(() => load().then(m => ({ default: m[name] })))
 const Classes = page(() => import('./pages/Classes'), 'Classes')
 const Carpool = page(() => import('./pages/Carpool'), 'Carpool')
@@ -33,14 +36,17 @@ const Notices = page(() => import('./pages/Notices'), 'Notices')
 const Events = page(() => import('./pages/Events'), 'Events')
 const Complaints = page(() => import('./pages/Complaints'), 'Complaints')
 const Book = page(() => import('./pages/Book'), 'Book')
+const Polls = page(() => import('./pages/Polls'), 'Polls')
+const Tour = page(() => import('./components/Tour'), 'Tour')
 
 const TABS = [
-  ['classes', 'Classes'], ['notices', 'Notices'], ['events', 'Events'], ['mess', 'Mess menu'], ['bus', 'Bus'],
+  ['classes', 'Classes'], ['notices', 'Notices'], ['polls', 'Polls'], ['events', 'Events'], ['mess', 'Mess menu'], ['bus', 'Transport'],
   ['laundry', 'Laundry'], ['rides', 'Carpool'], ['book', 'Book a room'], ['lost', 'Lost & found'],
   ['market', 'Buy & sell'], ['complaints', 'Complaints'], ['contacts', 'Contacts'],
 ] as const
-type Route = (typeof TABS)[number][0] | 'profile' | 'admin'
-const ROUTES = new Set<string>([...TABS.map(t => t[0]), 'profile', 'admin'])
+type Route = (typeof TABS)[number][0] | 'profile' | 'admin' | 'autos'
+const ROUTES = new Set<string>([...TABS.map(t => t[0]), 'profile', 'admin', 'autos'])
+const tourKey = (uid: string) => 'hub.tour.' + uid
 
 function useRoute(): Route {
   const get = () => {
@@ -58,7 +64,7 @@ function useRoute(): Route {
 
 function NowBoard() {
   useTick()
-  const { profile } = useMe()
+  const { uid, profile } = useMe()
   const { ref } = useRef_()
   const washers = useLive<Washer>('now-washers', () => supabase.from('washers').select('id,status,ends_at,hostel') as never, ['washers'])
   const nm = nowMin()
@@ -89,7 +95,10 @@ function NowBoard() {
     ['#mess', meal ? meal.label + ' now' : nextMeal ? 'Next: ' + nextMeal.label : 'Mess', meal ? 'till ' + meal.ends : nextMeal ? nextMeal.starts : 'Closed', dish || ' '],
     ['#laundry', h ? `Washers, hostel ${h.code}` : 'Washers', h ? `${free} of ${h.machines}` : 'Set hostel', h ? 'free right now' : 'in your profile'],
   ]
-  return <div className="now">{tiles.map(t => <a key={t[0]} className="tile" href={t[0]}><span>{t[1]}</span><b>{t[2]}</b><span>{t[3]}</span></a>)}</div>
+  return <>
+    <div className="now">{tiles.map(t => <a key={t[0]} className="tile" href={t[0]}><span>{t[1]}</span><b>{t[2]}</b><span>{t[3]}</span></a>)}</div>
+    <BirthdayCard uid={uid} />
+  </>
 }
 
 /** The newest pinned notice, until the student closes it. */
@@ -108,7 +117,7 @@ function PinnedBanner({ notices, route }: { notices: Notice[]; route: Route }) {
 
 function Shell() {
   const route = useRoute()
-  const { profile, isAdmin } = useMe()
+  const { uid, profile, isAdmin } = useMe()
   const { loading, error, ref } = useRef_()
   const notices = useNotices()
   useCalAutoSync()
@@ -117,6 +126,15 @@ function Shell() {
   useSessions([[profile.year, profile.section]], from, to)
   useShareSessions(cal, profile.year, profile.section)
   const unseen = route === 'notices' ? 0 : unseenCount(notices.data)
+  const unvoted = useUnvotedPolls(uid, profile)
+  // First-run intro; Profile -> "Show the intro again" brings it back.
+  const [tour, setTour] = useState(() => !local(tourKey(uid), false))
+  useEffect(() => {
+    const on = () => setTour(true)
+    window.addEventListener('hub:tour', on)
+    return () => window.removeEventListener('hub:tour', on)
+  }, [])
+  const endTour = () => { saveLocal(tourKey(uid), true); setTour(false) }
   const [online, setOnline] = useState(() => navigator.onLine)
   useEffect(() => {
     const on = () => setOnline(true), off = () => setOnline(false)
@@ -138,7 +156,7 @@ function Shell() {
           {!loading && <NowBoard />}
         </div>
       </header>
-      <nav><div className="wrap tabs">{TABS.map(([k, t]) => <a key={k} href={'#' + k} className={route === k ? 'on' : ''} aria-current={route === k ? 'page' : undefined}>{t}{k === 'notices' && <Badge n={unseen} />}</a>)}</div></nav>
+      <nav><div className="wrap tabs">{TABS.map(([k, t]) => <a key={k} href={'#' + k} className={route === k || (k === 'bus' && route === 'autos') ? 'on' : ''} aria-current={route === k ? 'page' : undefined}>{t}{k === 'notices' && <Badge n={unseen} />}{k === 'polls' && <Badge n={unvoted} />}</a>)}</div></nav>
       <main className="wrap">
         {!online && <div className="status show">You’re offline. Showing the timetable, menu and bus times saved on this device.</div>}
         {online && error && (haveData
@@ -156,6 +174,8 @@ function Shell() {
           {route === 'market' && <Market />}
           {route === 'laundry' && <Laundry />}
           {route === 'bus' && <Bus />}
+          {route === 'autos' && <Bus start="autos" />}
+          {route === 'polls' && <Polls />}
           {route === 'mess' && <Mess />}
           {route === 'complaints' && <Complaints />}
           {route === 'contacts' && <Contacts />}
@@ -164,6 +184,7 @@ function Shell() {
         </Suspense>}
       </main>
       <Notifier />
+      {tour && !loading && <Suspense fallback={null}><Tour onDone={endTour} /></Suspense>}
     </>
   )
 }

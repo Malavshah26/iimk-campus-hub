@@ -5,11 +5,56 @@ import { DAYS, inFmt, isWeekend, local, mins, norm, nowMin, saveLocal } from '..
 import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf, type Leg } from '../lib/shuttle'
 import { Chips, Empty } from '../components/Bits'
 import { MealVote, useMealFeedback } from '../components/MealFeedback'
+import { AUTO_GROUP, waMobile } from '../lib/autos'
+import type { Contact } from '../lib/types'
 
-export function Bus() {
+type Part = 'shuttle' | 'autos' | 'city'
+
+/** Transport: campus shuttle, auto/taxi drivers, city buses (each shown only if there's data, autos always). */
+export function Bus({ start }: { start?: Part }) {
   const { ref } = useRef_()
-  if (!ref.shuttle.length && !ref.bus.length) return <section><div className="hd"><h2>Bus</h2></div><Empty>No bus timings yet. Council admins add them in Admin → Bus.</Empty></section>
-  return <section>{ref.shuttle.length > 0 && <Shuttle />}{ref.bus.length > 0 && <CityBus />}</section>
+  const parts: [Part, string][] = [
+    ...(ref.shuttle.length ? [['shuttle', 'Campus shuttle'] as [Part, string]] : []),
+    ['autos', 'Autos & taxis'],
+    ...(ref.bus.length ? [['city', 'City bus'] as [Part, string]] : []),
+  ]
+  const [part, setPartRaw] = useState<Part>(() => { const p = start || local<Part>('hub.transport', 'shuttle'); return parts.some(x => x[0] === p) ? p : parts[0][0] })
+  const setPart = (p: Part) => { setPartRaw(p); saveLocal('hub.transport', p) }
+  const cur = parts.some(x => x[0] === part) ? part : parts[0][0]
+  return <section>
+    {parts.length > 1 && <Chips label="Transport" value={cur} onChange={setPart} options={parts} />}
+    {cur === 'shuttle' && <Shuttle />}
+    {cur === 'autos' && <Autos />}
+    {cur === 'city' && <CityBus />}
+  </section>
+}
+
+function Autos() {
+  const { ref } = useRef_()
+  const list = ref.contacts.filter(c => c.grp === AUTO_GROUP)
+  const [copied, setCopied] = useState('')
+  return (
+    <div>
+      <div className="hd"><div><h2>Autos & taxis</h2><p className="sub">Drivers who take students to and from campus. Call or WhatsApp them; agree the fare before you set off.</p></div></div>
+      {list.length ? <div className="ctc">
+        {list.map(c => <PhoneCard key={c.id} c={c} copied={copied} onCopy={n => { setCopied(n); setTimeout(() => setCopied(''), 1500) }} wa />)}
+      </div> : <Empty>No auto or taxi numbers yet. Council admins add them in Admin → Transport.</Empty>}
+      <p className="note">Going the same way as others? Post it in <a href="#rides">Carpool</a> and split the fare.</p>
+    </div>
+  )
+}
+
+function PhoneCard({ c, copied, onCopy, wa }: { c: Contact; copied: string; onCopy: (n: string) => void; wa?: boolean }) {
+  const w = wa ? waMobile(c.number) : ''
+  return <div className={'crd' + (c.emergency ? ' em' : '') + (w ? ' stack' : '')}>
+    <div><h4>{c.name}</h4><span className="num">{c.number}</span>{c.note && <span className="meta">{c.note}</span>}
+      {emails(c.email).map(e => <a key={e} className="mail" href={'mailto:' + e}>{e}</a>)}</div>
+    <div className="acts">
+      <a className="btn" href={'tel:' + c.number.replace(/[^\d+]/g, '')}>Call</a>
+      {w && <a className="btn" href={w} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
+      <button className="btn" type="button" onClick={() => navigator.clipboard?.writeText(c.number).then(() => onCopy(c.number), () => {})}>{copied === c.number ? 'Copied' : 'Copy'}</button>
+    </div>
+  </div>
 }
 
 function Shuttle() {
@@ -121,7 +166,9 @@ export function Contacts() {
   const [q, setQ] = useState('')
   const [copied, setCopied] = useState('')
   const term = norm(q)
-  const groups = Array.from(new Set(ref.contacts.map(c => c.grp)))
+  // Auto drivers have their own page (Transport); they still turn up when searching.
+  const groups = Array.from(new Set(ref.contacts.map(c => c.grp))).filter(g => term || g !== AUTO_GROUP)
+  const autos = ref.contacts.some(c => c.grp === AUTO_GROUP)
   return (
     <section>
       <div className="hd"><div><h2>Important contacts</h2><p className="sub">Tap to call or email, or copy the number.</p></div></div>
@@ -130,17 +177,11 @@ export function Contacts() {
         const items = ref.contacts.filter(c => c.grp === g && (!term || norm(`${c.name} ${c.number} ${c.note} ${c.email} ${g}`).includes(term)))
         if (!items.length) return null
         return <div className="cgrp" key={g}><h3>{g}</h3><div className="ctc">
-          {items.map(c => <div key={c.id} className={'crd' + (c.emergency ? ' em' : '')}>
-            <div><h4>{c.name}</h4><span className="num">{c.number}</span>{c.note && <span className="meta">{c.note}</span>}
-              {emails(c.email).map(e => <a key={e} className="mail" href={'mailto:' + e}>{e}</a>)}</div>
-            <div className="acts">
-              <a className="btn" href={'tel:' + c.number.replace(/\s/g, '')}>Call</a>
-              <button className="btn" type="button" onClick={() => navigator.clipboard?.writeText(c.number).then(() => { setCopied(c.number); setTimeout(() => setCopied(''), 1500) }, () => {})}>{copied === c.number ? 'Copied' : 'Copy'}</button>
-            </div>
-          </div>)}
+          {items.map(c => <PhoneCard key={c.id} c={c} copied={copied} onCopy={n => { setCopied(n); setTimeout(() => setCopied(''), 1500) }} wa={g === AUTO_GROUP} />)}
         </div></div>
       })}
       {!ref.contacts.length && <Empty>No contacts yet.</Empty>}
+      {autos && !term && <p className="note">Auto and taxi drivers’ numbers are under <a href="#autos">Transport → Autos & taxis</a>.</p>}
     </section>
   )
 }

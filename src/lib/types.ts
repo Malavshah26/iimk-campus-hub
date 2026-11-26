@@ -165,4 +165,19 @@ export interface Booking {
 
 export interface MealSummary { day: string; meal: string; up: number; down: number; comments: string[] | null }
 
+export interface PollOption { id: number; label: string; sort: number }
+export interface Poll {
+  id: string
+  title: string
+  details: string | null
+  secret: boolean
+  year: Year | null
+  section: string | null
+  closes_at: string
+  created_at: string
+  created_by: string | null
+  options: PollOption[]
+}
+export interface PollTally { poll_id: string; voters: number; counts: Record<string, number> | null }
+
 export interface ShuttleTrip { id: number; depart: string; stops: string[]; at: string[]; days: 'all' | 'weekday' | 'weekend'; note: string | null }
