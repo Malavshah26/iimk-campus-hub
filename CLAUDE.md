@@ -73,8 +73,9 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 ## Sample / placeholder data (must be replaced before launch)
 - Timetable: the made-up demo rows from `supabase/seed_timetable.sql` were removed from the live project at the
   owner's request (2026-11-26); students use Google Calendar sync instead. Don't re-seed it.
-- Campus and local phone numbers (all `90000 ...` numbers are fake;
-  national helplines 112/108/100/101/1091 are real)
+- Contacts: national helplines and the IIMK offices (Programmes, Admissions, Student Affairs & Hostel; given by the
+  owner, added by migration 0005 with emails) are real. The fake `90000 ...` placeholders were removed. Security,
+  medical centre, mess office, computer centre, library numbers are still missing.
 - Meal timings (seed guesses) and washing machines per hostel
 - Facilities for booking (6 sample rooms/courts added by 0002)
 

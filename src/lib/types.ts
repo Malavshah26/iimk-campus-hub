@@ -94,7 +94,7 @@ export interface TTRow {
 export interface BusTime { id: number; day_type: 'weekday' | 'weekend'; direction: 'out' | 'in'; time: string; note: string | null }
 export interface MealTime { meal: 'b' | 'l' | 's' | 'd'; label: string; starts: string; ends: string; sort: number }
 export interface MenuRow { day: string; meal: string; items: string }
-export interface Contact { id: number; grp: string; name: string; number: string; note: string | null; emergency: boolean; sort: number }
+export interface Contact { id: number; grp: string; name: string; number: string; note: string | null; email?: string | null; emergency: boolean; sort: number }
 export interface AttendanceRow { key: string; course_code: string; status: 'y' | 'n' }
 
 export interface Notice {

@@ -114,6 +114,8 @@ export function Mess() {
   )
 }
 
+const emails = (s: string | null | undefined) => (s || '').split(',').map(e => e.trim()).filter(Boolean)
+
 export function Contacts() {
   const { ref } = useRef_()
   const [q, setQ] = useState('')
@@ -122,14 +124,15 @@ export function Contacts() {
   const groups = Array.from(new Set(ref.contacts.map(c => c.grp)))
   return (
     <section>
-      <div className="hd"><div><h2>Important contacts</h2><p className="sub">Tap to call, or copy the number.</p></div></div>
+      <div className="hd"><div><h2>Important contacts</h2><p className="sub">Tap to call or email, or copy the number.</p></div></div>
       <input type="search" placeholder="Search contacts" aria-label="Search contacts" value={q} onChange={e => setQ(e.target.value)} style={{ maxWidth: 420, marginBottom: 16 }} />
       {groups.map(g => {
-        const items = ref.contacts.filter(c => c.grp === g && (!term || norm(`${c.name} ${c.number} ${c.note} ${g}`).includes(term)))
+        const items = ref.contacts.filter(c => c.grp === g && (!term || norm(`${c.name} ${c.number} ${c.note} ${c.email} ${g}`).includes(term)))
         if (!items.length) return null
         return <div className="cgrp" key={g}><h3>{g}</h3><div className="ctc">
           {items.map(c => <div key={c.id} className={'crd' + (c.emergency ? ' em' : '')}>
-            <div><h4>{c.name}</h4><span className="num">{c.number}</span>{c.note && <span className="meta">{c.note}</span>}</div>
+            <div><h4>{c.name}</h4><span className="num">{c.number}</span>{c.note && <span className="meta">{c.note}</span>}
+              {emails(c.email).map(e => <a key={e} className="mail" href={'mailto:' + e}>{e}</a>)}</div>
             <div className="acts">
               <a className="btn" href={'tel:' + c.number.replace(/\s/g, '')}>Call</a>
               <button className="btn" type="button" onClick={() => navigator.clipboard?.writeText(c.number).then(() => { setCopied(c.number); setTimeout(() => setCopied(''), 1500) }, () => {})}>{copied === c.number ? 'Copied' : 'Copy'}</button>

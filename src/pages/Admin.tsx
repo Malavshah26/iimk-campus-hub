@@ -165,7 +165,7 @@ function ContactsAdmin() {
   const save = useSave()
   const [rows, setRows] = useState<Contact[]>(ref.contacts)
   useEffect(() => setRows(ref.contacts), [ref.contacts])
-  const blank = { grp: 'Campus', name: '', number: '', note: '', emergency: false, sort: (ref.contacts.at(-1)?.sort || 0) + 1 }
+  const blank = { grp: 'IIMK offices', name: '', number: '', note: '', email: '', emergency: false, sort: (ref.contacts.at(-1)?.sort || 0) + 1 }
   const [n, setN] = useState(blank)
   const upd = (i: number, f: Partial<Contact>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...f } : r)))
   return (
@@ -175,21 +175,23 @@ function ContactsAdmin() {
           <input aria-label="Group" value={c.grp} onChange={e => upd(i, { grp: e.target.value })} />
           <input aria-label="Name" value={c.name} onChange={e => upd(i, { name: e.target.value })} />
           <input aria-label="Number" value={c.number} onChange={e => upd(i, { number: e.target.value })} />
-          <input aria-label="Note" value={c.note || ''} onChange={e => upd(i, { note: e.target.value })} />
+          <input aria-label="Note" value={c.note || ''} onChange={e => upd(i, { note: e.target.value })} placeholder="Note" />
+          <input aria-label="Email" type="text" inputMode="email" value={c.email || ''} onChange={e => upd(i, { email: e.target.value })} placeholder="Email (comma-separated)" />
           <input aria-label="Order" type="number" value={c.sort} onChange={e => upd(i, { sort: +e.target.value })} />
           <label className="ck"><input type="checkbox" checked={c.emergency} onChange={e => upd(i, { emergency: e.target.checked })} /> Emergency</label>
           <div className="acts" style={{ margin: 0 }}>
-            <button className="btn" type="button" onClick={() => save([supabase.from('contacts').update({ grp: c.grp, name: c.name, number: c.number, note: c.note || null, emergency: c.emergency, sort: c.sort }).eq('id', c.id)])}>Save</button>
+            <button className="btn" type="button" onClick={() => save([supabase.from('contacts').update({ grp: c.grp, name: c.name, number: c.number, note: c.note || null, email: c.email?.trim() || null, emergency: c.emergency, sort: c.sort }).eq('id', c.id)])}>Save</button>
             <button className="btn" type="button" onClick={() => save([supabase.from('contacts').delete().eq('id', c.id)], 'Deleted.')}>Delete</button>
           </div>
         </div>)}
       </div>
       <h3 style={{ marginTop: 20 }}>Add a contact</h3>
-      <form className="card adm-row" onSubmit={e => { e.preventDefault(); if (n.name && n.number) save([supabase.from('contacts').insert({ ...n, note: n.note || null })], 'Contact added.').then(ok => ok && setN(blank)) }}>
+      <form className="card adm-row" onSubmit={e => { e.preventDefault(); if (n.name && n.number) save([supabase.from('contacts').insert({ ...n, note: n.note || null, email: n.email.trim() || null })], 'Contact added.').then(ok => ok && setN(blank)) }}>
         <input aria-label="Group" placeholder="Group" value={n.grp} onChange={e => setN({ ...n, grp: e.target.value })} />
         <input aria-label="Name" placeholder="Name" required value={n.name} onChange={e => setN({ ...n, name: e.target.value })} />
         <input aria-label="Number" placeholder="Number" required value={n.number} onChange={e => setN({ ...n, number: e.target.value })} />
         <input aria-label="Note" placeholder="Note" value={n.note} onChange={e => setN({ ...n, note: e.target.value })} />
+        <input aria-label="Email" placeholder="Email (comma-separated)" inputMode="email" value={n.email} onChange={e => setN({ ...n, email: e.target.value })} />
         <input aria-label="Order" type="number" value={n.sort} onChange={e => setN({ ...n, sort: +e.target.value })} />
         <label className="ck"><input type="checkbox" checked={n.emergency} onChange={e => setN({ ...n, emergency: e.target.checked })} /> Emergency</label>
         <button className="btn pri inline" type="submit">Add</button>

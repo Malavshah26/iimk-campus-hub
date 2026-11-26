@@ -52,22 +52,10 @@ on conflict (day, meal) do nothing;
 -- Bus: the campus shuttle timetable is loaded by migrations/0003_campus_shuttle.sql.
 -- Add campus-to-city buses (if any) on the Admin page.
 
--- National helplines are real. Campus and local numbers are PLACEHOLDERS (90000 ...).
-insert into public.contacts (grp, name, number, note, emergency, sort) values
-  ('Emergency helplines (India)','Emergency, all services','112','Police, fire and ambulance',true,1),
-  ('Emergency helplines (India)','Ambulance','108','Kerala emergency ambulance',true,2),
-  ('Emergency helplines (India)','Police','100',null,true,3),
-  ('Emergency helplines (India)','Fire and rescue','101',null,true,4),
-  ('Emergency helplines (India)','Women helpline','1091',null,true,5),
-  ('Campus','Main gate security (24x7)','90000 10001','Late-night entry and emergencies on campus',false,10),
-  ('Campus','Medical centre','90000 10002','Doctor on call after hours',false,11),
-  ('Campus','Student Affairs Office','90000 10003','Office hours, Mon-Fri',false,12),
-  ('Campus','Hostel office','90000 10004','Room, maintenance and key issues',false,13),
-  ('Campus','Mess office','90000 10005','Mess timings and complaints',false,14),
-  ('Campus','Computer centre helpdesk','90000 10006','Wi-Fi and LAN issues',false,15),
-  ('Campus','Library desk','90000 10007',null,false,16),
-  ('Campus','Transport desk','90000 10008','Campus bus',false,17),
-  ('Campus','Students'' Council','90000 10009','Suggestions and student issues',false,18),
-  ('Local','Auto stand, Kunnamangalam','90000 10010','Ask for campus drop',false,20),
-  ('Local','Taxi service','90000 10011','Airport and station runs',false,21),
-  ('Local','Pharmacy, Kunnamangalam','90000 10012',null,false,22);
+-- National helplines (real). The IIMK office numbers and emails are added by migrations/0005_contact_emails.sql.
+insert into public.contacts (grp, name, number, note, email, emergency, sort) values
+  ('Emergency helplines (India)','Emergency, all services','112','Police, fire and ambulance',null,true,1),
+  ('Emergency helplines (India)','Ambulance','108','Kerala emergency ambulance',null,true,2),
+  ('Emergency helplines (India)','Police','100',null,null,true,3),
+  ('Emergency helplines (India)','Fire and rescue','101',null,null,true,4),
+  ('Emergency helplines (India)','Women helpline','1091',null,null,true,5);
