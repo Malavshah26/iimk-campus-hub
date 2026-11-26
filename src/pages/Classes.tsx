@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useAuth, useMe } from '../lib/auth'
 import { useRef_ } from '../lib/ref'
+import { attKey, markMany } from '../lib/attendance'
 import { sectionClasses, sessionsOn, sessionsUpdated, useSessions } from '../lib/sections'
 import { calendarSection, classSource, myClasses, setClassSource, useCal } from '../lib/gcal'
 import { CalendarSync } from '../components/CalendarSync'
@@ -88,6 +89,18 @@ function MyTimetable() {
     if (error) { toast('Couldn’t save attendance: ' + error.message); setAtt(att) }
   }
 
+  // Classes on the selected day that have started and aren't marked yet.
+  const todo = list.filter(c => (selected < t || (selected === t && mins(c.starts) <= nm)) && !att[attKey(ys, selected, c)])
+  const markAll = async (v: 'y' | 'n') => {
+    const items = todo.map(c => ({ key: attKey(ys, selected, c), code: c.code }))
+    const next = { ...att }
+    for (const i of items) next[i.key] = { key: i.key, course_code: i.code, status: v }
+    setAtt(next)
+    const err = await markMany(uid, items, v)
+    if (err) { toast('Couldn’t save attendance: ' + err); setAtt(att) }
+    else toast(`Marked ${items.length} class${items.length === 1 ? '' : 'es'} ${v === 'y' ? 'attended' : 'missed'}.`)
+  }
+
   /** Deletes all of this student's marks for one subject (e.g. old or wrong ones). */
   const clearCourse = async (code: string, n: number) => {
     if (!confirm(`Delete your ${n} attendance mark${n === 1 ? '' : 's'} for ${code}? This can’t be undone.`)) return
@@ -139,8 +152,15 @@ function MyTimetable() {
           </div>
           <button className="btn" type="button" aria-label="Next week" onClick={() => setWoff(w => w + 1)}>›</button>
         </div>
+        {todo.length > 1 && <div className="markall">
+          <span>{todo.length} classes {selected === t ? 'so far today' : 'this day'} aren’t marked</span>
+          <span className="acts" style={{ margin: 0 }}>
+            <button className="btn" type="button" onClick={() => markAll('y')}>✓ Attended all</button>
+            <button className="btn" type="button" onClick={() => markAll('n')}>Missed all</button>
+          </span>
+        </div>}
         {list.length ? list.map(c => {
-          const key = `${prefix}${selected}|${c.slot || 't' + c.starts}`
+          const key = attKey(ys, selected, c)
           const v = att[key]?.status
           const future = selected > t || (selected === t && mins(c.starts) > nm)
           const live = selected === t && nm >= mins(c.starts) && nm < mins(c.ends)

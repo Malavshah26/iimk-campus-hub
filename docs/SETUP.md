@@ -107,7 +107,7 @@ Reload the site: an **Admin** button appears in the header. From now on, add or 
 On the **Admin** page:
 
 - **Timetable:** optional. Students can sync their own Google Calendar on the Classes tab, which already has their real sessions. A section timetable is only needed for *Compare people* and for students who don't sync. Easiest is a spreadsheet. Make columns **Year, Section, Day, Period, Code, Course, Room** (Period = 1–6 or a start time like 09:15), copy the rows, paste them into **Import from a spreadsheet**, check the preview, **Import**. *Download current timetable (CSV)* gives you a starting file. You can also edit one section at a time in the grid.
-- **Mess menu:** each month, either run a menu file like `supabase/menus/2026-11_mess_menu.sql` or edit it on the page. Check **Meal timings** at the bottom too.
+- **Mess menu:** each month, upload the mess committee's Excel file (or paste its cells) in **Admin → Mess menu → Update from the mess committee's Excel**, check the preview, and replace. Photos/PDFs can't be read; old `.xls` files need *Save As .xlsx*. Check **Meal timings** at the bottom too; **remove** deletes a meal (e.g. Snacks) with its menu and ratings.
 - **Bus:** the campus shuttle (PGP Auditorium, Phase V Campus, C&D Housing, Maingate) is loaded by 0003. When a new bus sheet comes out, copy its rows from Excel and paste them into **Admin → Bus → Campus shuttle**; it shows a preview and replaces the old timetable. City buses (if any) go below it.
 - **Contacts:** replace placeholders. Campus numbers starting `90000` are fake.
 - **Hostels:** set the real number of washing machines in each hostel.

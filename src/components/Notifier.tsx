@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import { useLive } from '../lib/useLive'
 import { dayLabel, today } from '../lib/util'
+import { attKey, reminderTime } from '../lib/attendance'
+import { myClasses } from '../lib/gcal'
+import { useRef_ } from '../lib/ref'
 
 const STATUS: Record<string, string> = { open: 'open', progress: 'in progress', fixed: 'fixed' }
 
@@ -35,7 +38,8 @@ const at = (date: string, hm: string, minusMin = 0) => new Date(`${date}T${hm}:0
 
 /** Invisible: watches for things that concern the signed-in student and tells them. */
 export function Notifier() {
-  const { uid } = useMe()
+  const { uid, profile } = useMe()
+  const { ref } = useRef_()
   const alert = useAlert()
   const alertRef = useRef(alert)
   alertRef.current = alert
@@ -62,6 +66,19 @@ export function Notifier() {
       key: 'bk' + b.id, at: at(b.day, b.starts, 15),
       fire: () => alertRef.current('Booking in 15 min', `${b.facility?.name || 'Your booking'} at ${b.starts}`, 'bk' + b.id),
     })),
+    // Evening attendance reminder (time set in Profile).
+    ...(reminderTime() ? [{
+      key: 'att' + today(), at: at(today(), reminderTime()),
+      fire: async () => {
+        const d = today(), ys = profile.year + profile.section
+        const classes = myClasses(ref, new Date(), profile.year, profile.section)
+        if (!classes.length) return
+        const { data } = await supabase.from('attendance').select('key').like('key', `${ys}|${d}|%`)
+        const done = new Set(((data as { key: string }[]) || []).map(r => r.key))
+        const left = classes.filter(c => !done.has(attKey(ys, d, c)))
+        if (left.length) alertRef.current('Mark today’s attendance', `${left.length} of ${classes.length} classes aren’t marked: ${left.map(c => c.code).join(', ')}. One tap in Campus Hub.`, 'att')
+      },
+    }] : []),
   ])
 
   // Someone joins my ride; my complaint changes; a new notice is posted.

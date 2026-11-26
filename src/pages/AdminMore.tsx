@@ -8,6 +8,7 @@ import type { Facility, MealSummary, Year } from '../lib/types'
 import { dayLabel, dstr, today } from '../lib/util'
 import { Empty, ErrorNote, Loading } from '../components/Bits'
 import { parseShuttle, showTime } from '../lib/shuttle'
+import { parseMenu, textToGrid, xlsxToGrid, type Grid } from '../lib/menuImport'
 
 type Res = PromiseLike<{ error: { message: string } | null }>
 
@@ -321,6 +322,65 @@ export function ShuttleAdmin() {
           <button className="linkbtn" type="button" onClick={() => remove(t.id)}>remove</button>
         </div>)}</div>
       </details>
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- Mess menu import */
+
+export function MenuImport() {
+  const { ref, reload } = useRef_()
+  const toast = useToast()
+  const [grid, setGrid] = useState<Grid | null>(null)
+  const [source, setSource] = useState('')
+  const [text, setText] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const parsed = grid ? parseMenu(grid, ref.meals.map(m => ({ meal: m.meal, label: m.label }))) : null
+  const label = (m: string) => ref.meals.find(x => x.meal === m)?.label || m
+
+  const onFile = async (f: File | undefined) => {
+    if (!f) return
+    setErr(''); setText(''); setSource(f.name)
+    try {
+      if (/\.xls$/i.test(f.name)) throw new Error('That’s the old .xls format. In Excel use File → Save As → Excel Workbook (.xlsx), or copy the cells and paste them below.')
+      if (/\.(png|jpe?g|webp|heic|pdf)$/i.test(f.name)) throw new Error('Photos and PDFs can’t be read. Ask the mess committee for the Excel file, or type the menu on the page below.')
+      if (/\.(xlsx|xlsm)$/i.test(f.name) || f.type.includes('spreadsheetml')) setGrid(xlsxToGrid(new Uint8Array(await f.arrayBuffer())))
+      else setGrid(textToGrid(await f.text()))
+    } catch (e) { setGrid(null); setErr((e as Error).message) }
+  }
+  const onPaste = (v: string) => { setText(v); setSource(v.trim() ? 'pasted cells' : ''); setErr(''); setGrid(v.trim() ? textToGrid(v) : null) }
+
+  const save = async () => {
+    if (!parsed?.rows.length) return
+    if (!confirm(`Replace ${parsed.meals.map(label).join(', ')} for ${new Set(parsed.rows.map(r => r.day)).size} days with this menu?`)) return
+    setBusy(true)
+    const { error } = await supabase.from('mess_menu').upsert(parsed.rows)
+    setBusy(false)
+    toast(error ? 'Error: ' + explain(error.message) : 'Mess menu updated for everyone.')
+    if (!error) { setGrid(null); setText(''); setSource('') }
+    reload()
+  }
+
+  return (
+    <div className="panel" style={{ marginBottom: 20 }}>
+      <h3>Update from the mess committee’s Excel</h3>
+      <p className="note">Upload the monthly menu file (.xlsx or .csv), or copy its cells and paste them below. It needs a row with the day names (Monday … Sunday) and Breakfast / Lunch / Dinner blocks under it. Check the preview, then replace.</p>
+      <div className="ph" style={{ marginTop: 10 }}>
+        <input type="file" accept=".xlsx,.xlsm,.csv,.tsv,.txt,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-label="Upload menu file" onChange={e => onFile(e.target.files?.[0])} />
+      </div>
+      <textarea aria-label="Pasted menu cells" rows={3} style={{ marginTop: 8, fontFamily: 'ui-monospace,monospace', fontSize: 13 }} value={text} onChange={e => onPaste(e.target.value)} placeholder="…or paste the copied cells here" />
+      {err && <p className="note err">{err}</p>}
+      {parsed && <>
+        <p className="note">From {source}{parsed.title ? ` (“${parsed.title}”)` : ''}: {parsed.meals.length ? `${parsed.meals.map(label).join(', ')} for ${new Set(parsed.rows.map(r => r.day)).size} days.` : 'nothing usable.'}</p>
+        {parsed.errors.length > 0 && <ul className="note err">{parsed.errors.map(e => <li key={e}>{e}</li>)}</ul>}
+        {parsed.rows.length > 0 && <div className="scroll"><table className="adm menuprev"><thead><tr><th></th>{[...new Set(parsed.rows.map(r => r.day))].map(d => <th key={d}>{d}</th>)}</tr></thead>
+          <tbody>{parsed.meals.map(m => <tr key={m}><td className="tm"><b>{label(m)}</b></td>{parsed.rows.filter(r => r.meal === m).map(r => {
+            const list = r.items ? r.items.split(', ') : []
+            return <td key={r.day} title={r.items}>{list.slice(0, 3).join(', ')}{list.length > 3 ? ` +${list.length - 3}` : list.length ? '' : '—'}</td>
+          })}</tr>)}</tbody></table></div>}
+        <button className="btn pri inline" type="button" style={{ marginTop: 10 }} disabled={busy || !parsed.rows.length} onClick={save}>{busy ? 'Saving…' : 'Replace the menu with this'}</button>
+      </>}
     </div>
   )
 }

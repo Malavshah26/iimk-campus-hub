@@ -103,3 +103,10 @@ export function downloadIcs(e: CalItem) {
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 2000)
 }
+
+/** The headline dish of a meal ("Rice, dal, Punjabi Chole, …" -> "Punjabi Chole"), skipping everyday staples. */
+const STAPLE = /^(veg salad|green salad|onion salad|salad|(wheat )?chapati(\/phulka)?|phulka|roti|(plain |white |steamed )?rice|(plain )?curd|(jeera |masala )?buttermilk|lassi|pappad|papad|fryums|pickle|sambh?ar|rasam|tea|coffee|milk|tea\/coffee\/milk|bread(\/butter\/jam)?|boiled (egg|pulses)|banana|papaya|watermelon|mixed fruits|chocos|corn ?flakes|.*chutney)$/i
+export const mainDish = (items: string) => {
+  const list = items.split(',').map(s => s.trim()).filter(Boolean)
+  return list.find(x => !STAPLE.test(x)) || list[0] || ''
+}

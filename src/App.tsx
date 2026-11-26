@@ -5,7 +5,7 @@ import { configured, supabase } from './lib/supabase'
 import { ToastProvider } from './lib/toast'
 import { useLive, useTick } from './lib/useLive'
 import type { Notice, Washer } from './lib/types'
-import { DAYS, dstr, inFmt, isWeekend, local, mins, nowMin, saveLocal } from './lib/util'
+import { DAYS, dstr, inFmt, isWeekend, local, mainDish, mins, nowMin, saveLocal } from './lib/util'
 import { Login, NotConfigured } from './pages/Login'
 import { ProfileForm } from './pages/Profile'
 import { washerState } from './lib/washer'
@@ -15,6 +15,7 @@ import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf } from './lib/shut
 import { isLive, unseenCount, useNotices } from './lib/notices'
 import { Badge, Loading } from './components/Bits'
 import { Notifier } from './components/Notifier'
+import { AttendanceNudge } from './components/AttendanceNudge'
 
 // Each tab is downloaded only when first opened, so the app starts faster on slow campus Wi-Fi.
 const page = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
@@ -74,7 +75,7 @@ function NowBoard() {
   const shuttle = stop ? legsFrom(ref.shuttle.filter(t => runsToday(t)), stop).find(l => mins(l.at) >= nm) : undefined
   const meal = ref.meals.find(m => nm >= mins(m.starts) && nm < mins(m.ends))
   const nextMeal = meal || ref.meals.find(m => mins(m.starts) > nm)
-  const dish = nextMeal ? (ref.menu.find(r => r.day === DAYS[new Date().getDay()] && r.meal === nextMeal.meal)?.items || '').split(',')[0] : ''
+  const dish = nextMeal ? mainDish(ref.menu.find(r => r.day === DAYS[new Date().getDay()] && r.meal === nextMeal.meal)?.items || '') : ''
   const h = ref.hostels.find(x => x.code === profile.hostel)
   const byId = new Map(washers.data.map(w => [w.id, w]))
   const free = h ? Array.from({ length: h.machines }, (_, i) => `${h.code}-${i + 1}`).filter(id => washerState(byId.get(id)) === 'free').length : 0
@@ -144,6 +145,7 @@ function Shell() {
           ? <div className="status show">Couldn’t refresh campus data, showing the copy saved on this device.</div>
           : <div className="status show">Couldn’t load campus data: {error}</div>)}
         <PinnedBanner notices={notices.data} route={route} />
+        {!loading && <AttendanceNudge route={route} />}
         {loading ? <Loading /> : <Suspense fallback={<Loading />}>
           {route === 'classes' && <Classes />}
           {route === 'notices' && <Notices />}

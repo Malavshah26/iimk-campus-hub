@@ -253,3 +253,10 @@ table.shtable td{font-size:14px;padding:4px 6px;border-bottom:1px solid var(--li
 .calset .steps{font-size:14.5px}
 .calset a{color:var(--hi)}
 .linkbtn.small{font-size:13px;color:var(--mut);margin-top:4px}
+.markall{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;margin:0 0 10px;padding:8px 10px 8px 14px;border-radius:12px;border:1px dashed var(--hi);font-size:14.5px}
+.markall .btn{min-height:38px;padding:6px 12px}
+.banner.nudge{flex-wrap:wrap}
+.banner.nudge .btn{min-height:38px;padding:6px 12px;font-size:14px}
+.row4{display:grid;grid-template-columns:8em minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:center}
+table.menuprev{min-width:760px}
+table.menuprev td{font-size:13px;color:var(--ink);vertical-align:top;padding:4px 6px;border-bottom:1px solid var(--line)}

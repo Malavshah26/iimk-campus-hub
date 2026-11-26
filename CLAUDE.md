@@ -48,8 +48,14 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   the caller's profile, replaces that window, ignores syncs with <3 sessions. `sectionClasses()` (src/lib/sections.ts)
   prefers these over the weekly `timetable` grid for Classes' section view, Compare people, the next-class tile and
   event clashes. Students can turn sharing off in calendar settings (`hub.shareSessions`).
-- Mess menu: real November 2026 menu in `supabase/menus/2026-11_mess_menu.sql` (no snacks on the official sheet;
-  meal timings are still the seed's guesses).
+- Mess menu: real November 2026 menu in `supabase/menus/2026-11_mess_menu.sql`. IIMK has no snacks meal (removed from
+  seed; admins can remove meals in Admin). Monthly updates: Admin → Mess menu → upload .xlsx / paste, parsed by
+  `src/lib/menuImport.ts` (fflate unzip + regex XML; finds the day-name row, Breakfast/Lunch/Dinner blocks by label,
+  letters spelt down the side, or block order; skips category labels and the Note row). Top-bar dish = `mainDish()`
+  (first non-staple item). Meal timings are still the seed's guesses.
+- Attendance: Classes has "Attended all / Missed all" for a day's unmarked classes; after the last class a banner
+  (`AttendanceNudge`) offers one-tap marking; `Notifier` sends an evening reminder at the time set in Profile
+  (`hub.attRemind`, default 21:00) if anything is unmarked. Helpers in `src/lib/attendance.ts`.
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
   open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables

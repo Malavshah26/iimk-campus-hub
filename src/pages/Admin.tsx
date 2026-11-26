@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import type { BusTime, Contact, Hostel, Slot, Year } from '../lib/types'
 import { Chips } from '../components/Bits'
-import { AdminsAdmin, FacilitiesAdmin, FeedbackAdmin, ShuttleAdmin, TimetableImport, UsageAdmin } from './AdminMore'
+import { AdminsAdmin, FacilitiesAdmin, FeedbackAdmin, MenuImport, ShuttleAdmin, TimetableImport, UsageAdmin } from './AdminMore'
 
 type Tab = 'timetable' | 'mess' | 'feedback' | 'bus' | 'contacts' | 'hostels' | 'facilities' | 'slots' | 'admins' | 'usage'
 const DAYNAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -108,7 +108,9 @@ function MessAdmin() {
   const submit = () => save([supabase.from('mess_menu').upsert(days.flatMap(d => ref.meals.map(x => ({ day: d, meal: x.meal, items: (m[`${d}|${x.meal}`] || '').trim() }))))], 'Mess menu saved.')
   return (
     <div>
-      <button className="btn pri inline" type="button" onClick={submit}>Save menu</button>
+      <MenuImport />
+      <h3>Or edit by hand</h3>
+      <button className="btn pri inline" type="button" onClick={submit} style={{ marginTop: 8 }}>Save menu</button>
       <div className="scroll" style={{ marginTop: 12 }}>
         <table className="adm wide">
           <thead><tr><th>Day</th>{ref.meals.map(x => <th key={x.meal}>{x.label}</th>)}</tr></thead>
@@ -128,9 +130,10 @@ function MealTimes() {
   const [rows, setRows] = useState(ref.meals)
   useEffect(() => setRows(ref.meals), [ref.meals])
   return <div className="list" style={{ maxWidth: 520 }}>
-    {rows.map((r, i) => <div className="row3" key={r.meal}><b>{r.label}</b>
+    {rows.map((r, i) => <div className="row4" key={r.meal}><b>{r.label}</b>
       <input type="time" aria-label="Starts" value={r.starts} onChange={e => setRows(rows.map((x, j) => j === i ? { ...x, starts: e.target.value } : x))} />
-      <input type="time" aria-label="Ends" value={r.ends} onChange={e => setRows(rows.map((x, j) => j === i ? { ...x, ends: e.target.value } : x))} /></div>)}
+      <input type="time" aria-label="Ends" value={r.ends} onChange={e => setRows(rows.map((x, j) => j === i ? { ...x, ends: e.target.value } : x))} />
+      <button className="linkbtn" type="button" onClick={() => { if (confirm(`Remove ${r.label} from the mess menu? Its menu and ratings are deleted too.`)) save([supabase.from('meal_times').delete().eq('meal', r.meal)], `${r.label} removed.`) }}>remove</button></div>)}
     <button className="btn inline" type="button" onClick={() => save([supabase.from('meal_times').upsert(rows)], 'Meal timings saved.')}>Save timings</button>
   </div>
 }

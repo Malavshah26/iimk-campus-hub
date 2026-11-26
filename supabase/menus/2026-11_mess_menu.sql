@@ -1,7 +1,7 @@
 -- IIMK students' mess menu, November 2026 (from the mess committee's sheet; tentative, may change
 -- with market availability). Run in Supabase: SQL Editor -> New query -> paste -> Run.
--- Replaces breakfast, lunch and dinner for every day. The official menu has no evening snacks,
--- so snacks are cleared (shown as "-"); fill them in on Admin -> Mess menu if there are any.
+-- Replaces breakfast, lunch and dinner for every day (the official menu has no evening snacks).
+-- Next month: upload the committee's Excel file on Admin -> Mess menu instead of SQL.
 -- Main dishes are listed first because the app's top bar shows the first item.
 
 insert into public.mess_menu (day, meal, items) values
@@ -28,7 +28,5 @@ insert into public.mess_menu (day, meal, items) values
   ('Thu','d','Shahi Paneer / Chicken Kolhapuri, Matar Masala, Mix Veg Poriyal, Jeera Rice, Tomato Pappu, Fruit Custard, Chapati/Phulka, Jeera Buttermilk, Fryums, Veg Salad, Pickle'),
   ('Fri','d','Hyderabadi Paneer Dum Biryani / Hyderabadi Chicken Dum Biryani, Mirchi ka Salan, Onion Cucumber Raita, Semiya Kheer, Onion Salad, Pickle'),
   ('Sat','d','Peanut Masala / Egg Kolhapuri, Aloo Methi Dry, Chole Masala, Bhagara Rice, Dal Tadka, Chapati/Phulka, Plain Curd, Fryums, Veg Salad, Pickle'),
-  ('Sun','d','Paneer Tikka Masala / Chicken Tikka Masala, White Peas Kurma, Cluster Beans Poriyal, Veg Pulao, Dal Maharani, Balushahi, Chapati/Phulka, Buttermilk, Fryums, Veg Salad, Pickle'),
-  -- Snacks: not on the official menu
-  ('Mon','s',''), ('Tue','s',''), ('Wed','s',''), ('Thu','s',''), ('Fri','s',''), ('Sat','s',''), ('Sun','s','')
+  ('Sun','d','Paneer Tikka Masala / Chicken Tikka Masala, White Peas Kurma, Cluster Beans Poriyal, Veg Pulao, Dal Maharani, Balushahi, Chapati/Phulka, Buttermilk, Fryums, Veg Salad, Pickle')
 on conflict (day, meal) do update set items = excluded.items;

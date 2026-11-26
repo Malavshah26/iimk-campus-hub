@@ -22,37 +22,30 @@ on conflict (slot) do nothing;
 
 insert into public.meal_times (meal, label, starts, ends, sort) values
   ('b','Breakfast','07:30','09:30',1),('l','Lunch','12:30','14:30',2),
-  ('s','Snacks','16:30','17:30',3),('d','Dinner','19:30','22:00',4)
+  ('d','Dinner','19:30','22:00',4)
 on conflict (meal) do nothing;
 
 insert into public.mess_menu (day, meal, items) values
   ('Mon','b','Idli, sambar, coconut chutney, bread omelette'),
   ('Mon','l','Rice, dal tadka, aviyal, cabbage thoran, curd, papad'),
-  ('Mon','s','Pazham pori, tea / coffee'),
   ('Mon','d','Chapati, paneer butter masala, jeera rice, dal, salad'),
   ('Tue','b','Puttu, kadala curry, banana'),
   ('Tue','l','Matta rice, sambar, beans thoran, egg roast, curd'),
-  ('Tue','s','Samosa, tea'),
   ('Tue','d','Kerala parotta, chicken curry / veg kurma, rice, rasam'),
   ('Wed','b','Aloo paratha, curd, pickle'),
   ('Wed','l','Rajma chawal, roti, bhindi fry, salad'),
-  ('Wed','s','Uzhunnu vada, tea'),
   ('Wed','d','Fried rice, gobi manchurian, chilli chicken / chilli paneer, soup'),
   ('Thu','b','Dosa, sambar, chutney'),
   ('Thu','l','Rice, moru curry, beetroot thoran, egg curry, papad'),
-  ('Thu','s','Bread pakoda, tea'),
   ('Thu','d','Chapati, chana masala, rice, dal fry, gulab jamun'),
   ('Fri','b','Appam, veg stew / egg curry'),
   ('Fri','l','Chicken biryani / veg biryani, raita, pickle'),
-  ('Fri','s','Veg cutlet, coffee'),
   ('Fri','d','Roti, aloo gobi, rice, sambar, semiya payasam'),
   ('Sat','b','Poha, boiled eggs, fruit'),
   ('Sat','l','Rice, dal, kadhi pakoda, aloo jeera, curd'),
-  ('Sat','s','Vada pav, tea'),
   ('Sat','d','Ghee rice, chicken fry / mushroom masala, raita'),
   ('Sun','b','Chole bhature, lassi'),
   ('Sun','l','Kerala sadya: rice, sambar, aviyal, olan, thoran, payasam'),
-  ('Sun','s','Unniyappam, tea'),
   ('Sun','d','Pulao, dal makhani, roti, ice cream')
 on conflict (day, meal) do nothing;
 
