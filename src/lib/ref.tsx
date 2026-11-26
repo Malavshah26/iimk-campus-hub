@@ -90,7 +90,7 @@ export function useRef_() {
   return v
 }
 
-export interface ClassItem { slot: number; starts: string; ends: string; code: string; name: string; room: string | null }
+export interface ClassItem { slot: number; starts: string; ends: string; code: string; name: string; room: string | null; detail?: string }
 
 /** Classes for one year+section on a given date, in slot order. */
 export function classesFor(ref: RefData, date: Date, year: string, section: string): ClassItem[] {

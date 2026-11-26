@@ -36,7 +36,10 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   localStorage (`hub.cal`, `src/lib/gcal.ts`), fetched via `api/ics.js`, parsed by `src/lib/ical.ts` (weekly/daily
   RRULE, EXDATE, RECURRENCE-ID, cancellations; times read as IST). `myClasses()` then drives Classes, the "Next
   class" tile and Events clash checks; sessions map to class periods so attendance keys stay `year+section|date|slot`
-  (`|t<HH:MM>` for sessions outside periods), grouped by `courseKey(title)`. The owner's classes live in his
+  (`|t<HH:MM>` for sessions outside periods). IIMK invites are titled "Session No: 15 - EE(C)-LME-(CR B1)"
+  (session, course code, (C)=core, faculty initials, room): `src/lib/sessionTitle.ts` parses them so attendance
+  groups by course code (EE, CMA, OS, CF, LEPM); course full names come from the timetable table if an admin
+  has entered matching codes. First connect auto-filters to "Session No" when the calendar has other events. The owner's classes live in his
   @iimk.ac.in Google account, not the personal Gmail connected to Claude.
 - Mess menu: real November 2026 menu in `supabase/menus/2026-11_mess_menu.sql` (no snacks on the official sheet;
   meal timings are still the seed's guesses).

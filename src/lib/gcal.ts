@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { parseIcs, type CalEvent } from './ical'
+import { looksLikeSession, parseSessionTitle } from './sessionTitle'
 import { classesFor, type ClassItem, type RefData } from './ref'
 import { supabase } from './supabase'
 import { hhmm, local, overlaps, saveLocal } from './util'
@@ -45,17 +46,26 @@ async function fetchIcs(url: string): Promise<string> {
   throw new Error(msg)
 }
 
-/** Downloads and reads the calendar. Throws on a first connect; keeps the old copy on a refresh. */
-export async function syncCal(url = state?.url || '', filter = state?.filter ?? ''): Promise<number> {
-  if (!url) return 0
+export const SESSION_FILTER = 'Session No'
+
+/**
+ * Downloads and reads the calendar. Throws on a first connect; keeps the old copy on a refresh.
+ * On a first connect without a filter, if the calendar mixes IIMK class sessions ("Session No: …")
+ * with other events, it filters to the sessions automatically (changeable in settings).
+ */
+export async function syncCal(url = state?.url || '', filter = state?.filter ?? ''): Promise<{ count: number; classes: number; autoFiltered: boolean }> {
+  if (!url) return { count: 0, classes: 0, autoFiltered: false }
+  const first = !state || state.url !== url
   try {
     const text = await fetchIcs(url)
     const now = Date.now()
     const events = parseIcs(text, now - 150 * DAY, now + 200 * DAY).filter(e => !e.allDay && e.end - e.start <= 12 * 3600e3)
-    set({ url, filter, events, at: now, error: null })
-    return events.length
+    const classes = events.filter(e => looksLikeSession(e.title)).length
+    const autoFiltered = first && !filter && classes >= 3 && classes < events.length
+    set({ url, filter: autoFiltered ? SESSION_FILTER : filter, events, at: now, error: null })
+    return { count: events.length, classes, autoFiltered }
   } catch (e) {
-    if (state && state.url === url) { set({ ...state, error: (e as Error).message }); return state.events.length }
+    if (state && state.url === url) { set({ ...state, error: (e as Error).message }); return { count: state.events.length, classes: 0, autoFiltered: false } }
     throw e
   }
 }
@@ -103,10 +113,17 @@ export function calEventsOn(cal: CalState, date: Date): CalEvent[] {
  */
 export function myClasses(ref: RefData, date: Date, year: string, section: string, useCalendar = true): ClassItem[] {
   if (!state || !useCalendar || classSource() !== 'cal') return classesFor(ref, date, year, section)
-  // The calendar is the source of truth: its titles group attendance (e.g. "FM-I Financial Management").
+  // The calendar is the source of truth: its titles group attendance by course.
+  const names = new Map<string, string>()
+  for (const r of ref.timetable) if (!names.has(r.course_code.toLowerCase()) || (r.year === year && r.section === section)) names.set(r.course_code.toLowerCase(), r.course_name)
   return calEventsOn(state, date).map(e => {
     const starts = hhmm(e.start), ends = hhmm(e.end)
     const slot = ref.slots.find(s => overlaps(starts, ends, s.starts, s.ends))?.slot || 0
+    const s = parseSessionTitle(e.title) // "Session No: 15 - EE(C)-LME-(CR B1)"
+    if (s) return {
+      slot, starts, ends, code: s.code, name: names.get(s.code.toLowerCase()) || s.code,
+      room: s.room || e.location || null, detail: [`Session ${s.session}`, s.faculty].filter(Boolean).join(' · '),
+    }
     return { slot, starts, ends, code: courseKey(e.title), name: e.title, room: e.location || null }
   })
 }

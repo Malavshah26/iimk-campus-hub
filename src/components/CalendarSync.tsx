@@ -22,10 +22,12 @@ export function CalendarSync({ open: startOpen = false }: { open?: boolean }) {
     setMsg('')
     setBusy(true)
     try {
-      const n = await syncCal(url.trim(), filter.trim())
+      const r = await syncCal(url.trim(), filter.trim())
       setUrl('')
       setOpen(false)
-      toast(n ? `Synced ${n} sessions from your calendar.` : 'Connected, but no timed events were found in the next few months.')
+      toast(!r.count ? 'Connected, but no timed events were found around now.'
+        : r.autoFiltered ? `Synced ${r.classes} class sessions. Other events are hidden (change in settings).`
+        : `Synced ${r.count} events from your calendar.`)
     } catch (err) {
       setMsg((err as Error).message)
     }
@@ -33,9 +35,9 @@ export function CalendarSync({ open: startOpen = false }: { open?: boolean }) {
   }
   const refresh = async () => {
     setBusy(true)
-    const n = await syncCal().catch(() => 0)
+    const r = await syncCal().catch(() => null)
     setBusy(false)
-    if (!cal?.error) toast(`Up to date: ${n} sessions.`)
+    if (r && !cal?.error) toast(`Up to date: ${r.count} events.`)
   }
 
   if (cal && !open) return (
@@ -53,8 +55,8 @@ export function CalendarSync({ open: startOpen = false }: { open?: boolean }) {
     <div className="panel calset">
       <h3>Calendar sync</h3>
       <label className="lab" htmlFor="cal-f">Only show events containing (optional)</label>
-      <input id="cal-f" value={filter} onChange={e => setFilter(e.target.value)} placeholder="e.g. Sec A, PGP (comma-separated)" />
-      <p className="note">Leave blank if the calendar has only classes. Use words from class titles if it also has personal events.</p>
+      <input id="cal-f" value={filter} onChange={e => setFilter(e.target.value)} placeholder="e.g. Session No (comma-separated)" />
+      <p className="note">IIMK class invites start with “Session No”, so that filter shows only classes. Leave blank to show everything in the calendar.</p>
       <div className="acts">
         <button className="btn pri inline" type="button" onClick={() => { setCalFilter(filter.trim()); setOpen(false); toast('Saved.') }}>Save</button>
         <button className="btn" type="button" onClick={() => setOpen(false)}>Close</button>

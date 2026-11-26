@@ -120,7 +120,7 @@ function MyTimetable() {
           return (
             <div key={key} className={'cls' + (live ? ' now' : '')}>
               <div><b className="t">{c.starts}</b><small>till {c.ends}</small></div>
-              <div><h3>{c.name}</h3><div className="meta">{c.code}{c.room ? ` · ${c.room}` : ''}{live && <> · <b>On now</b></>}</div></div>
+              <div><h3>{c.name}</h3><div className="meta">{[c.name !== c.code && c.code, c.detail, c.room].filter(Boolean).join(' · ')}{live && <> · <b>On now</b></>}</div></div>
               <div className="att">
                 {future ? <button disabled>Upcoming</button> : <>
                   <button className={v === 'y' ? 'y' : ''} aria-pressed={v === 'y'} onClick={() => mark(key, c.code, 'y')}>Attended</button>
