@@ -5,11 +5,12 @@ import { configured, supabase } from './lib/supabase'
 import { ToastProvider } from './lib/toast'
 import { useLive, useTick } from './lib/useLive'
 import type { Notice, Washer } from './lib/types'
-import { DAYS, inFmt, isWeekend, local, mins, nowMin, saveLocal } from './lib/util'
+import { DAYS, dstr, inFmt, isWeekend, local, mins, nowMin, saveLocal } from './lib/util'
 import { Login, NotConfigured } from './pages/Login'
 import { ProfileForm } from './pages/Profile'
 import { washerState } from './lib/washer'
 import { myClasses, useCal, useCalAutoSync } from './lib/gcal'
+import { sessionsOn, shareWindow, useSessions, useShareSessions } from './lib/sections'
 import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf } from './lib/shuttle'
 import { isLive, unseenCount, useNotices } from './lib/notices'
 import { Badge, Loading } from './components/Bits'
@@ -63,7 +64,7 @@ function NowBoard() {
   const cal = useCal()
   const classes = myClasses(ref, new Date(), profile.year, profile.section)
   // No calendar and no timetable for this section yet: point to calendar sync instead of "All done".
-  const noSchedule = !cal && !ref.timetable.some(r => r.year === profile.year && r.section === profile.section)
+  const noSchedule = !cal && !ref.timetable.some(r => r.year === profile.year && r.section === profile.section) && !sessionsOn(profile.year, profile.section, dstr(new Date()))
   const c = classes.find(x => mins(x.ends) > nm)
   const busList = ref.bus.filter(b => b.day_type === (isWeekend() ? 'weekend' : 'weekday') && b.direction === 'out').map(b => b.time).sort()
   const bus = busList.find(t => mins(t) >= nm)
@@ -110,6 +111,10 @@ function Shell() {
   const { loading, error, ref } = useRef_()
   const notices = useNotices()
   useCalAutoSync()
+  const cal = useCal()
+  const [from, to] = shareWindow()
+  useSessions([[profile.year, profile.section]], from, to)
+  useShareSessions(cal, profile.year, profile.section)
   const unseen = route === 'notices' ? 0 : unseenCount(notices.data)
   const [online, setOnline] = useState(() => navigator.onLine)
   useEffect(() => {

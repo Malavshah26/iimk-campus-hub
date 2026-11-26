@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { disconnectCal, setCalFilter, syncCal, useCal } from '../lib/gcal'
+import { setShareEnabled, shareEnabled } from '../lib/sections'
 import { useToast } from '../lib/toast'
 
 const ago = (ms: number) => {
@@ -57,6 +58,8 @@ export function CalendarSync({ open: startOpen = false }: { open?: boolean }) {
       <label className="lab" htmlFor="cal-f">Only show events containing (optional)</label>
       <input id="cal-f" value={filter} onChange={e => setFilter(e.target.value)} placeholder="e.g. Session No (comma-separated)" />
       <p className="note">IIMK class invites start with “Session No”, so that filter shows only classes. Leave blank to show everything in the calendar.</p>
+      <label className="ck" style={{ marginTop: 12 }}><input type="checkbox" checked={shareEnabled()} onChange={e => { setShareEnabled(e.target.checked); toast(e.target.checked ? 'Your section’s sessions will be shared on the next sync.' : 'Sharing turned off on this device.') }} /> Share my section’s class sessions with my section</label>
+      <p className="note">Only “Session No” class invites for your own section (course, session, faculty initials, room, time) are shared, so classmates see the timetable without syncing. Nothing else from your calendar, and never the link.</p>
       <div className="acts">
         <button className="btn pri inline" type="button" onClick={() => { setCalFilter(filter.trim()); setOpen(false); toast('Saved.') }}>Save</button>
         <button className="btn" type="button" onClick={() => setOpen(false)}>Close</button>
@@ -84,7 +87,7 @@ export function CalendarSync({ open: startOpen = false }: { open?: boolean }) {
       <input id="cal-url" required autoComplete="off" spellCheck={false} value={url} onChange={e => setUrl(e.target.value)} placeholder="https://calendar.google.com/calendar/ical/…/private-…/basic.ics" />
       <label className="lab" htmlFor="cal-f2">Only show events containing (optional)</label>
       <input id="cal-f2" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Leave blank if the calendar has only classes" />
-      <p className="note">The link stays on this device only; Campus Hub never stores it. Anyone with the link can see that calendar, so don’t share it. If it leaks, use <b>Reset</b> next to it in Google Calendar.</p>
+      <p className="note">Your section’s class sessions (only “Session No” invites) are shared so classmates see the timetable too; you can turn this off in settings. The link stays on this device only; Campus Hub never stores it. Anyone with the link can see that calendar, so don’t share it. If it leaks, use <b>Reset</b> next to it in Google Calendar.</p>
       <div className="acts">
         <button className="btn pri inline" type="submit" disabled={busy}>{busy ? 'Syncing…' : 'Connect'}</button>
         <button className="btn" type="button" onClick={() => { setOpen(false); setMsg('') }}>Cancel</button>

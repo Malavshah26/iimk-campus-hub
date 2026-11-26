@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useAuth, useMe } from '../lib/auth'
-import { classesFor, useRef_ } from '../lib/ref'
+import { useRef_ } from '../lib/ref'
+import { sectionClasses, sessionsOn, sessionsUpdated, useSessions } from '../lib/sections'
 import { calendarSection, classSource, myClasses, setClassSource, useCal } from '../lib/gcal'
 import { CalendarSync } from '../components/CalendarSync'
 import { supabase } from '../lib/supabase'
@@ -64,11 +65,14 @@ function MyTimetable() {
   }, [uid])
 
   const days = weekDays(woff)
+  useSessions([[year, section]], dstr(days[0]), dstr(days[days.length - 1]))
   const t = today()
   const selected = days.some(d => dstr(d) === day) ? day : (days.some(d => dstr(d) === t) ? t : dstr(days[0]))
   // With a calendar, your own sessions (and your profile's year/section for attendance).
   const ys = fromCal ? profile.year + profile.section : year + section
-  const list = fromCal ? myClasses(ref, new Date(selected + 'T00:00'), profile.year, profile.section) : classesFor(ref, new Date(selected + 'T00:00'), year, section)
+  const list = fromCal ? myClasses(ref, new Date(selected + 'T00:00'), profile.year, profile.section) : sectionClasses(ref, new Date(selected + 'T00:00'), year, section)
+  const shared = !fromCal && days.some(d => sessionsOn(year, section, dstr(d)) !== null)
+  const sharedAt = shared ? sessionsUpdated(year, section) : null
   const nm = nowMin()
   const prefix = ys + '|'
 
@@ -153,9 +157,11 @@ function MyTimetable() {
             </div>
           )
         }) : <Empty>{fromCal ? 'Nothing in your calendar for this day.'
-          : !ref.timetable.some(r => r.year === year && r.section === section) ? `There’s no timetable for ${year === '1' ? 'Year 1' : 'Year 2'}, ${sectionLabel(section)} yet. Sync your Google Calendar above to see your own classes.`
+          : shared ? `No ${sectionLabel(section)} classes this day.`
+          : !ref.timetable.some(r => r.year === year && r.section === section) ? `There’s no timetable for ${year === '1' ? 'Year 1' : 'Year 2'}, ${sectionLabel(section)} yet. It fills in by itself once anyone in ${sectionLabel(section)} syncs their Google Calendar here.`
           : new Date(selected + 'T00:00').getDay() === 0 ? 'No classes on Sunday.' : 'No classes in the timetable for this day.'}</Empty>}
       </div>
+      {shared && <p className="note" style={{ gridColumn: '1 / -1', margin: '-8px 0 0' }}>{sectionLabel(section)} timetable from classmates’ synced calendars{sharedAt ? `, updated ${new Date(sharedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}.</p>}
       <aside className="panel stick">
         <h2>Your attendance</h2>
         <p className="sub">{fromCal ? 'From your calendar' : `${year === '1' ? 'Year 1' : 'Year 2'} · ${sectionLabel(section)}`} · private to you</p>
@@ -211,9 +217,10 @@ function Compare() {
 
   const all = [{ n: profile.name + ' (you)', y: profile.year, s: profile.section }, ...people].map((p, i) => ({ ...p, c: PCOL[i % PCOL.length] }))
   const days = weekDays(woff)
+  useSessions(all.map(p => [p.y, p.s] as [string, string]), dstr(days[0]), dstr(days[days.length - 1]))
   const t = today()
   const nm = nowMin()
-  const sched = all.map(p => days.map(d => classesFor(ref, d, p.y, p.s)))
+  const sched = all.map(p => days.map(d => sectionClasses(ref, d, p.y, p.s)))
   const free: { d: Date; slot: number; starts: string; ends: string }[] = []
 
   return (
@@ -221,7 +228,7 @@ function Compare() {
       <div className="panel" style={{ marginBottom: 16 }}>
         <h2>Find a common free slot</h2>
         <p className="sub">Add classmates to see everyone’s classes together.</p>
-        {all.some(p => !ref.timetable.some(r => r.year === p.y && r.section === p.s)) && <div className="status show">This uses section timetables, and some sections here don’t have one yet, so they’ll look free. A council admin can add them in Admin → Timetable.</div>}
+        {all.some(p => !ref.timetable.some(r => r.year === p.y && r.section === p.s) && !days.some(d => sessionsOn(p.y, p.s, dstr(d)) !== null)) && <div className="status show">This uses section timetables, and some sections here don’t have one yet, so they’ll look free. A section’s timetable fills in once anyone in it syncs their Google Calendar.</div>}
         <div className="people">
           {all.map((p, i) => (
             <span key={i} className="pchip" style={{ ['--c' as string]: p.c }}>

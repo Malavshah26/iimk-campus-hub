@@ -5,7 +5,8 @@ About 30 minutes. You need: a GitHub account (this repository), a free [Supabase
 > **Already set up?** Run any migration you haven't run yet, in order (Supabase → **SQL Editor → New query**, paste the
 > whole file, **Run**; if Supabase warns about "destructive operations", click **Run this query**):
 > `0002_campus_life.sql` (notices, events, complaints, mess feedback, room booking, admin tools) and
-> `0003_campus_shuttle.sql` (campus shuttle timetable). Until then the new parts say they need the database update;
+> `0003_campus_shuttle.sql` (campus shuttle timetable), `0004_section_sessions.sql` (section timetables filled from
+> students' synced calendars). Until then the new parts say they need the database update;
 > everything else keeps working.
 
 ---
@@ -25,9 +26,10 @@ In the Supabase dashboard open **SQL Editor → New query**, then run these file
 1. `supabase/migrations/0001_init.sql`: tables, access rules, photo storage
 2. `supabase/migrations/0002_campus_life.sql`: notices, events, complaints, mess feedback, room booking, admin tools
 3. `supabase/migrations/0003_campus_shuttle.sql`: campus shuttle, with the timetable w.e.f. 09.06.2026
-4. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
-5. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
-6. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
+4. `supabase/migrations/0004_section_sessions.sql`: section timetables shared from students' synced calendars
+5. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
+6. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
+7. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
 
 Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002, 0003 and the seeds.
 

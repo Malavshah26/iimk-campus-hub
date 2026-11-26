@@ -43,6 +43,11 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   matching codes. First connect auto-filters to "Session No" when the calendar has other events; Classes offers
   to fix the profile section if it differs from the calendar's section. The owner is in Section C. The owner's classes live in his
   @iimk.ac.in Google account, not the personal Gmail connected to Claude.
+- Section timetables (0004 `section_sessions`): after a calendar sync, `useShareSessions` sends the student's
+  own-section "Session No" sessions (today-7..+60 days) to `sync_section_sessions()`, which takes year/section from
+  the caller's profile, replaces that window, ignores syncs with <3 sessions. `sectionClasses()` (src/lib/sections.ts)
+  prefers these over the weekly `timetable` grid for Classes' section view, Compare people, the next-class tile and
+  event clashes. Students can turn sharing off in calendar settings (`hub.shareSessions`).
 - Mess menu: real November 2026 menu in `supabase/menus/2026-11_mess_menu.sql` (no snacks on the official sheet;
   meal timings are still the seed's guesses).
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is

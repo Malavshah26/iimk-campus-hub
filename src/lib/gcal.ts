@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { parseIcs, type CalEvent } from './ical'
 import { looksLikeSession, parseSessionTitle } from './sessionTitle'
-import { classesFor, type ClassItem, type RefData } from './ref'
+import type { ClassItem, RefData } from './ref'
+import { sectionClasses } from './sections'
 import { supabase } from './supabase'
 import { hhmm, local, overlaps, saveLocal } from './util'
 
@@ -112,7 +113,7 @@ export function calEventsOn(cal: CalState, date: Date): CalEvent[] {
  * section timetable. Calendar sessions are matched to class periods so attendance lines up.
  */
 export function myClasses(ref: RefData, date: Date, year: string, section: string, useCalendar = true): ClassItem[] {
-  if (!state || !useCalendar || classSource() !== 'cal') return classesFor(ref, date, year, section)
+  if (!state || !useCalendar || classSource() !== 'cal') return sectionClasses(ref, date, year, section)
   // The calendar is the source of truth: its titles group attendance by course.
   const names = new Map<string, string>()
   for (const r of ref.timetable) if (!names.has(r.course_code.toLowerCase()) || (r.year === year && r.section === section)) names.set(r.course_code.toLowerCase(), r.course_name)
