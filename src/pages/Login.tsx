@@ -48,6 +48,8 @@ export function Login() {
       const m = error.message
       if (/after (\d+) seconds?/i.test(m)) { setWait(+(m.match(/after (\d+) seconds?/i)![1])); setSent(true); return }
       if (/rate limit/i.test(m)) { setMsg('Too many sign-in emails were sent in the last hour. Wait a while and try again, or ask the council to set up custom email (docs/SETUP.md, step 4).'); return }
+      if (error.status === 504 || /\b504\b|timeout|deadline/i.test(m)) { setSent(true); setWait(WAIT); setMsg('The email service was slow to answer, so the email may still arrive. Check your inbox and spam for a minute. If nothing comes, the council should check Supabase → Authentication → Logs (usually the SMTP settings).'); return }
+      if (error.status === 500 || /sending .*email/i.test(m)) { setMsg('Campus Hub couldn’t send the email right now. Try again in a few minutes; if it keeps failing, tell the council (their SMTP settings need checking).'); return }
       setMsg(explain(m))
       return
     }
