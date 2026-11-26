@@ -9,7 +9,8 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
 - No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life). New
   schema changes go in a new numbered file that is safe to re-run (`if not exists`, `drop policy if exists`).
-- Only server code: `api/keepalive.js`, a daily Vercel cron calling `rpc/ping` so the free project doesn't pause.
+- Server code (Vercel functions): `api/keepalive.js`, a daily cron calling `rpc/ping` so the free project doesn't
+  pause; `api/ics.js`, which fetches a student's calendar .ics (campus JWT required, Google/Outlook hosts only).
 
 ## Key decisions (keep unless the user changes them)
 - Only emails at `iimk.ac.in` (or a subdomain) can use the app. Enforced by `public.is_campus_user()`
@@ -31,6 +32,12 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   Loaded with reference data but optional (a missing table must not break `RefProvider`). Admin → Bus pastes
   the official sheet (Time, From, To, To, Extended) via `parseShuttle()`. Stops seen: PGP Auditorium, Phase V
   Campus, C&D Housing, Maingate. Real timetable w.e.f. 2026-06-09; sample city buses were removed.
+- Google Calendar sync (Classes tab): a student pastes their calendar's secret iCal link; it's kept only in
+  localStorage (`hub.cal`, `src/lib/gcal.ts`), fetched via `api/ics.js`, parsed by `src/lib/ical.ts` (weekly/daily
+  RRULE, EXDATE, RECURRENCE-ID, cancellations; times read as IST). `myClasses()` then drives Classes, the "Next
+  class" tile and Events clash checks; sessions map to class periods so attendance keys stay `year+section|date|slot`
+  (`|t<HH:MM>` for sessions outside periods), grouped by `courseKey(title)`. The owner's classes live in his
+  @iimk.ac.in Google account, not the personal Gmail connected to Claude.
 - Mess menu: real November 2026 menu in `supabase/menus/2026-11_mess_menu.sql` (no snacks on the official sheet;
   meal timings are still the seed's guesses).
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is

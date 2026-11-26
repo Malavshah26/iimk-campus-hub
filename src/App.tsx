@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { AuthProvider, useAuth, useMe } from './lib/auth'
-import { classesFor, RefProvider, useRef_ } from './lib/ref'
+import { RefProvider, useRef_ } from './lib/ref'
 import { configured, supabase } from './lib/supabase'
 import { ToastProvider } from './lib/toast'
 import { useLive, useTick } from './lib/useLive'
@@ -9,6 +9,7 @@ import { DAYS, inFmt, isWeekend, local, mins, nowMin, saveLocal } from './lib/ut
 import { Login, NotConfigured } from './pages/Login'
 import { ProfileForm } from './pages/Profile'
 import { washerState } from './lib/washer'
+import { myClasses, useCal, useCalAutoSync } from './lib/gcal'
 import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf } from './lib/shuttle'
 import { isLive, unseenCount, useNotices } from './lib/notices'
 import { Badge, Loading } from './components/Bits'
@@ -59,7 +60,8 @@ function NowBoard() {
   const { ref } = useRef_()
   const washers = useLive<Washer>('now-washers', () => supabase.from('washers').select('id,status,ends_at,hostel') as never, ['washers'])
   const nm = nowMin()
-  const classes = classesFor(ref, new Date(), profile.year, profile.section)
+  useCal()
+  const classes = myClasses(ref, new Date(), profile.year, profile.section)
   const c = classes.find(x => mins(x.ends) > nm)
   const busList = ref.bus.filter(b => b.day_type === (isWeekend() ? 'weekend' : 'weekday') && b.direction === 'out').map(b => b.time).sort()
   const bus = busList.find(t => mins(t) >= nm)
@@ -103,6 +105,7 @@ function Shell() {
   const { profile, isAdmin } = useMe()
   const { loading, error, ref } = useRef_()
   const notices = useNotices()
+  useCalAutoSync()
   const unseen = route === 'notices' ? 0 : unseenCount(notices.data)
   const [online, setOnline] = useState(() => navigator.onLine)
   useEffect(() => {
@@ -150,7 +153,6 @@ function Shell() {
         </Suspense>}
       </main>
       <Notifier />
-      <footer className="wrap foot">Run by the IIMK Students’ Council. Something wrong? <a href="#complaints">Report it</a>.</footer>
     </>
   )
 }

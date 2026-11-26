@@ -4,7 +4,7 @@ One web app for everyday campus life at IIM Kozhikode, run by the Students' Coun
 
 | Tab | What it does |
 |---|---|
-| **Classes** | Section-wise timetable (A–H, LSM, FIN; Year 1 and 2), private attendance with course-wise %, “can miss N more” at 75%, and **Compare people** to find common free slots |
+| **Classes** | Section-wise timetable (A–H, LSM, FIN; Year 1 and 2) or **your own Google Calendar** (secret iCal link, kept on your device), private attendance with course-wise %, “can miss N more” at 75%, and **Compare people** to find common free slots |
 | **Notices** | Council announcements, pinned notices as a banner, unread badge |
 | **Events** | Anyone can post club events and talks; flags clashes with other events and with *your* classes, shows organisers which sections have class at that time; “I’m going”, Google Calendar / .ics |
 | **Mess menu** | Weekly menu with what’s on now; 👍/👎 per meal (totals for all, comments only for the council) |

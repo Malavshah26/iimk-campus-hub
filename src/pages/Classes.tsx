@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useMe } from '../lib/auth'
 import { classesFor, useRef_ } from '../lib/ref'
+import { classSource, myClasses, setClassSource, useCal } from '../lib/gcal'
+import { CalendarSync } from '../components/CalendarSync'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import { useTick } from '../lib/useLive'
@@ -42,6 +44,8 @@ function MyTimetable() {
   const [woff, setWoff] = useState(0)
   const [day, setDay] = useState(today())
   const [att, setAtt] = useState<Record<string, AttendanceRow>>({})
+  const cal = useCal()
+  const fromCal = !!cal && classSource() === 'cal'
 
   useEffect(() => {
     supabase.from('attendance').select('key,course_code,status').then(({ data }) => {
@@ -52,9 +56,11 @@ function MyTimetable() {
   const days = weekDays(woff)
   const t = today()
   const selected = days.some(d => dstr(d) === day) ? day : (days.some(d => dstr(d) === t) ? t : dstr(days[0]))
-  const list = classesFor(ref, new Date(selected + 'T00:00'), year, section)
+  // With a calendar, your own sessions (and your profile's year/section for attendance).
+  const ys = fromCal ? profile.year + profile.section : year + section
+  const list = fromCal ? myClasses(ref, new Date(selected + 'T00:00'), profile.year, profile.section) : classesFor(ref, new Date(selected + 'T00:00'), year, section)
   const nm = nowMin()
-  const prefix = year + section + '|'
+  const prefix = ys + '|'
 
   const mark = async (key: string, code: string, v: 'y' | 'n') => {
     const prev = att[key]
@@ -85,14 +91,16 @@ function MyTimetable() {
   return (
     <div className="grid tt">
       <div>
-        <div className="sel">
+        <CalendarSync />
+        {cal && <Chips label="Source" value={fromCal ? 'cal' : 'tt'} onChange={v => setClassSource(v)} options={[['cal', 'My Google Calendar'], ['tt', 'Section timetable']]} />}
+        {!fromCal && <div className="sel">
           <div><label className="lab" htmlFor="t-year">Year</label>
             <select id="t-year" value={year} onChange={e => setYear(e.target.value as Year)}><option value="1">Year 1</option><option value="2">Year 2</option></select></div>
           <div><label className="lab" htmlFor="t-sec">Section</label>
             <select id="t-sec" value={section} onChange={e => setSection(e.target.value)}>
               {ref.sections.map(s => <option key={s.code} value={s.code}>{s.label}</option>)}
             </select></div>
-        </div>
+        </div>}
         <div className="wk">
           <button className="btn" type="button" aria-label="Previous week" onClick={() => setWoff(w => w - 1)}>‹</button>
           <div className="chips" ref={el => { const c = el?.querySelector<HTMLElement>('.chip.on'); if (el && c) el.scrollLeft = c.offsetLeft - el.offsetLeft - (el.clientWidth - c.offsetWidth) / 2 }}>
@@ -105,12 +113,12 @@ function MyTimetable() {
           <button className="btn" type="button" aria-label="Next week" onClick={() => setWoff(w => w + 1)}>›</button>
         </div>
         {list.length ? list.map(c => {
-          const key = `${prefix}${selected}|${c.slot}`
+          const key = `${prefix}${selected}|${c.slot || 't' + c.starts}`
           const v = att[key]?.status
           const future = selected > t || (selected === t && mins(c.starts) > nm)
           const live = selected === t && nm >= mins(c.starts) && nm < mins(c.ends)
           return (
-            <div key={c.slot} className={'cls' + (live ? ' now' : '')}>
+            <div key={key} className={'cls' + (live ? ' now' : '')}>
               <div><b className="t">{c.starts}</b><small>till {c.ends}</small></div>
               <div><h3>{c.name}</h3><div className="meta">{c.code}{c.room ? ` · ${c.room}` : ''}{live && <> · <b>On now</b></>}</div></div>
               <div className="att">
@@ -121,11 +129,11 @@ function MyTimetable() {
               </div>
             </div>
           )
-        }) : <Empty>{new Date(selected + 'T00:00').getDay() === 0 ? 'No classes on Sunday.' : 'No classes in the timetable for this day.'}</Empty>}
+        }) : <Empty>{fromCal ? 'Nothing in your calendar for this day.' : new Date(selected + 'T00:00').getDay() === 0 ? 'No classes on Sunday.' : 'No classes in the timetable for this day.'}</Empty>}
       </div>
       <aside className="panel stick">
         <h2>Your attendance</h2>
-        <p className="sub">{year === '1' ? 'Year 1' : 'Year 2'} · {sectionLabel(section)} · private to you</p>
+        <p className="sub">{fromCal ? 'From your calendar' : `${year === '1' ? 'Year 1' : 'Year 2'} · ${sectionLabel(section)}`} · private to you</p>
         {tot.t ? <>
           <div className="big">{pct(tot)}%</div>
           <div className="meta">{tot.y} of {tot.t} marked classes attended</div>

@@ -245,3 +245,10 @@ table.adm td.tm b{display:block;color:var(--ink)}
 .dep .route small{color:var(--mut);font-size:13px;white-space:nowrap}
 table.shtable{min-width:0;width:100%}
 table.shtable td{font-size:14px;padding:4px 6px;border-bottom:1px solid var(--line)}
+.calbar{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;width:100%;margin:0 0 12px;padding:10px 14px;border-radius:12px;background:var(--pale);border:1px solid var(--line);font:500 14.5px Inter,sans-serif;color:var(--ink);text-align:left}
+.calbar.cta{cursor:pointer}
+.calbar.cta:hover{border-color:var(--hi)}
+.calbar b{color:var(--hi)}
+.calset{margin:0 0 14px}
+.calset .steps{font-size:14.5px}
+.calset a{color:var(--hi)}

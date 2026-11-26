@@ -3,13 +3,14 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase, configured } from './supabase'
 import type { Profile } from './types'
 import { local, saveLocal } from './util'
+import { disconnectCal } from './gcal'
 
 const meKey = (uid: string) => 'hub.me.' + uid
 
 /** Removes everything this app cached on the device (used on sign-out). */
 export function clearLocalCache() {
   try {
-    for (const k of Object.keys(localStorage)) if (k.startsWith('hub.me.') || k === 'hub.ref') localStorage.removeItem(k)
+    for (const k of Object.keys(localStorage)) if (k.startsWith('hub.me.') || k === 'hub.ref' || k === 'hub.cal') localStorage.removeItem(k)
   } catch { /* storage unavailable */ }
 }
 
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     reloadProfile: () => load(session),
     signOut: async () => {
       clearLocalCache()
+      disconnectCal()
       await supabase.auth.signOut()
     },
   }

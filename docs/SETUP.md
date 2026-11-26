@@ -126,6 +126,8 @@ On the **Admin** page:
 
 **"Continue with Google" button:** only if IIMK email runs on Google Workspace. Create an OAuth client in Google Cloud Console, enable the Google provider in Supabase (Authentication → Sign In / Providers → Google), then add `VITE_ENABLE_GOOGLE_LOGIN=true` in Vercel and redeploy. The database still blocks non-IIMK emails either way.
 
+**Google Calendar sync:** nothing to set up. Students tap *Sync them here* on the Classes tab and paste their class calendar's **Secret address in iCal format** (Google Calendar → Settings → the calendar → Integrate calendar). If that option is missing for @iimk.ac.in accounts, the institute's Google Workspace admin has turned off secret addresses; ask the Computer Centre, or share the class calendar to a personal Gmail and use that account's link.
+
 **Install on phones:** students can open the site in Chrome/Safari and choose **Add to Home screen**. It then opens like an app, works offline for the timetable, menu, bus and contacts, and can show notifications (turn them on in **Profile**).
 
 ## Handing over to the next council

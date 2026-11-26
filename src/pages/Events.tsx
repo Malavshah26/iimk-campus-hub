@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMe } from '../lib/auth'
-import { classesFor, useRef_, type RefData } from '../lib/ref'
+import { useRef_, type RefData } from '../lib/ref'
+import { myClasses, useCal } from '../lib/gcal'
 import { explain, supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import { useLive } from '../lib/useLive'
@@ -32,6 +33,7 @@ export function Events() {
   const { uid, isAdmin, profile } = useMe()
   const { ref } = useRef_()
   const toast = useToast()
+  const cal = useCal()
   const from = dstr(new Date(Date.now() - 60 * 864e5))
   const { data, loading, error, reload } = useLive<CampusEvent>('events',
     () => supabase.from('events').select('*, poster:profiles!events_user_id_fkey(name,phone), event_rsvps!event_rsvps_event_id_fkey(user_id)')
@@ -114,7 +116,7 @@ export function Events() {
         <input type="search" placeholder="Search events" aria-label="Search events" value={q} onChange={e => setQ(e.target.value)} style={{ marginBottom: 12 }} />
         {loading ? <Loading /> : days.length ? days.map(d => {
           const dayEvents = list.filter(e => e.event_date === d)
-          const myClasses = classesFor(ref, new Date(d + 'T00:00'), profile.year, profile.section)
+          const mineToday = myClasses(ref, new Date(d + 'T00:00'), profile.year, profile.section)
           return (
             <div key={d} className="evday">
               <h3>{dayLabel(d)}</h3>
@@ -122,7 +124,7 @@ export function Events() {
                 {dayEvents.map(e => {
                   const going = e.event_rsvps.some(r => r.user_id === uid)
                   const others = data.filter(o => o.id !== e.id && o.event_date === e.event_date && overlaps(e.starts, e.ends, o.starts, o.ends))
-                  const mine = myClasses.filter(c => overlaps(e.starts, e.ends, c.starts, c.ends))
+                  const mine = mineToday.filter(c => overlaps(e.starts, e.ends, c.starts, c.ends))
                   const wa = waLink(e.poster?.phone)
                   const cal = { title: e.title, date: e.event_date, starts: e.starts, ends: e.ends, place: e.venue, details: [e.organiser, e.description, e.link].filter(Boolean).join('\n') }
                   return (
@@ -149,7 +151,7 @@ export function Events() {
             </div>
           )
         }) : <Empty>{filter === 'up' ? 'No upcoming events yet. Post the first one.' : 'Nothing here.'}</Empty>}
-        <p className="note">Class clashes use {sectionLabel(profile.section)}, Year {profile.year} (from your profile).</p>
+        <p className="note">Class clashes use {cal ? 'your Google Calendar' : `${sectionLabel(profile.section)}, Year ${profile.year} (from your profile)`}.</p>
       </div>
     </div>
   )
