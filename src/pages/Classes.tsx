@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import { useMe } from '../lib/auth'
+import { useAuth, useMe } from '../lib/auth'
 import { classesFor, useRef_ } from '../lib/ref'
-import { classSource, myClasses, setClassSource, useCal } from '../lib/gcal'
+import { calendarSection, classSource, myClasses, setClassSource, useCal } from '../lib/gcal'
 import { CalendarSync } from '../components/CalendarSync'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
@@ -46,6 +46,16 @@ function MyTimetable() {
   const [att, setAtt] = useState<Record<string, AttendanceRow>>({})
   const cal = useCal()
   const fromCal = !!cal && classSource() === 'cal'
+  const { reloadProfile } = useAuth()
+  // "EE(C)" in the invites means Section C: offer to fix the profile if it says otherwise.
+  const calSec = ref.sections.find(s => s.code.toUpperCase() === calendarSection(fromCal ? cal : null))
+  const fixSection = async () => {
+    if (!calSec) return
+    const { error } = await supabase.from('profiles').update({ section: calSec.code, updated_at: new Date().toISOString() }).eq('id', uid)
+    if (error) return toast('Couldn’t update your profile: ' + error.message)
+    await reloadProfile()
+    toast(`Profile updated to ${sectionLabel(calSec.code)}.`)
+  }
 
   useEffect(() => {
     supabase.from('attendance').select('key,course_code,status').then(({ data }) => {
@@ -92,6 +102,9 @@ function MyTimetable() {
     <div className="grid tt">
       <div>
         <CalendarSync />
+        {calSec && calSec.code !== profile.section && <div className="status show">
+          Your calendar is for <b>{sectionLabel(calSec.code)}</b>, but your profile says {sectionLabel(profile.section)}. <button className="linkbtn" type="button" onClick={fixSection}>Switch my profile to {sectionLabel(calSec.code)}</button>
+        </div>}
         {cal && <Chips label="Source" value={fromCal ? 'cal' : 'tt'} onChange={v => setClassSource(v)} options={[['cal', 'My Google Calendar'], ['tt', 'Section timetable']]} />}
         {!fromCal && <div className="sel">
           <div><label className="lab" htmlFor="t-year">Year</label>

@@ -122,10 +122,23 @@ export function myClasses(ref: RefData, date: Date, year: string, section: strin
     const s = parseSessionTitle(e.title) // "Session No: 15 - EE(C)-LME-(CR B1)"
     if (s) return {
       slot, starts, ends, code: s.code, name: names.get(s.code.toLowerCase()) || s.code,
-      room: s.room || e.location || null, detail: [`Session ${s.session}`, s.faculty].filter(Boolean).join(' · '),
+      room: s.room ? 'Room ' + s.room : e.location || null, detail: [`Session ${s.session}`, s.faculty].filter(Boolean).join(' · '),
     }
     return { slot, starts, ends, code: courseKey(e.title), name: e.title, room: e.location || null }
   })
+}
+
+/** The section most of the calendar's sessions are for ("EE(C)" -> "C"), or '' if unclear. */
+export function calendarSection(cal: CalState | null): string {
+  if (!cal) return ''
+  const n = new Map<string, number>()
+  for (const e of cal.events) {
+    const s = parseSessionTitle(e.title)?.section.toUpperCase()
+    if (s) n.set(s, (n.get(s) || 0) + 1)
+  }
+  const [best] = [...n.entries()].sort((a, b) => b[1] - a[1])
+  const total = [...n.values()].reduce((a, b) => a + b, 0)
+  return best && best[1] >= 3 && best[1] / total >= 0.8 ? best[0] : ''
 }
 
 /** "FM-I Financial Management I (Sec A) - rescheduled" -> "FM-I Financial Management I": one attendance group per course. */
