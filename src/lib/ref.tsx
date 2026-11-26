@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef as useRef_ts, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
 import { local, saveLocal } from './util'
-import type { BusTime, Contact, Hostel, MealTime, MenuRow, Section, Slot, TTRow } from './types'
+import type { BusTime, Contact, Hostel, MealTime, MenuRow, Section, ShuttleTrip, Slot, TTRow } from './types'
 
 export interface RefData {
   sections: Section[]
@@ -12,9 +12,10 @@ export interface RefData {
   meals: MealTime[]
   menu: MenuRow[]
   contacts: Contact[]
+  shuttle: ShuttleTrip[]
 }
 
-const empty: RefData = { sections: [], hostels: [], slots: [], timetable: [], bus: [], meals: [], menu: [], contacts: [] }
+const empty: RefData = { sections: [], hostels: [], slots: [], timetable: [], bus: [], meals: [], menu: [], contacts: [], shuttle: [] }
 const Ctx = createContext<{ ref: RefData; loading: boolean; error: string | null; reload: () => Promise<void> } | null>(null)
 
 const CACHE = 'hub.ref'
@@ -27,13 +28,14 @@ const STALE_MS = 10 * 60 * 1000
  */
 export function RefProvider({ children }: { children: ReactNode }) {
   const [cached] = useState(() => local<{ at: number; ref: RefData } | null>(CACHE, null))
-  const [ref, setRef] = useState<RefData>(cached?.ref || empty)
+  const [ref, setRef] = useState<RefData>({ ...empty, ...cached?.ref })
   const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState<string | null>(null)
   const lastLoad = useRef_ts(cached?.at || 0)
 
   const reload = useCallback(async () => {
-    const q = await Promise.all([
+    // shuttle_trips is optional (database update 0003): its absence must not break the rest of the app.
+    const [q, sh] = await Promise.all([Promise.all([
       supabase.from('sections').select('*').order('sort'),
       supabase.from('hostels').select('*').order('sort'),
       supabase.from('class_slots').select('*').order('slot'),
@@ -42,7 +44,7 @@ export function RefProvider({ children }: { children: ReactNode }) {
       supabase.from('meal_times').select('*').order('sort'),
       supabase.from('mess_menu').select('*'),
       supabase.from('contacts').select('*').order('sort'),
-    ])
+    ]), supabase.from('shuttle_trips').select('*').order('depart')])
     const err = q.find(r => r.error)?.error
     setLoading(false)
     if (err) {
@@ -60,6 +62,7 @@ export function RefProvider({ children }: { children: ReactNode }) {
       meals: (q[5].data as MealTime[]) || [],
       menu: (q[6].data as MenuRow[]) || [],
       contacts: (q[7].data as Contact[]) || [],
+      shuttle: (sh.data as ShuttleTrip[]) || [],
     }
     setRef(next)
     lastLoad.current = Date.now()

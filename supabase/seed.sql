@@ -56,13 +56,8 @@ insert into public.mess_menu (day, meal, items) values
   ('Sun','d','Pulao, dal makhani, roti, ice cream')
 on conflict (day, meal) do nothing;
 
-insert into public.bus_times (day_type, direction, time) values
-  ('weekday','out','07:30'),('weekday','out','09:00'),('weekday','out','11:00'),('weekday','out','13:00'),
-  ('weekday','out','15:30'),('weekday','out','17:30'),('weekday','out','19:30'),
-  ('weekday','in','08:15'),('weekday','in','10:00'),('weekday','in','12:00'),('weekday','in','14:15'),
-  ('weekday','in','16:30'),('weekday','in','18:45'),('weekday','in','21:30'),
-  ('weekend','out','09:00'),('weekend','out','11:30'),('weekend','out','14:00'),('weekend','out','16:30'),('weekend','out','18:30'),
-  ('weekend','in','10:15'),('weekend','in','13:00'),('weekend','in','15:30'),('weekend','in','19:30'),('weekend','in','22:00');
+-- Bus: the campus shuttle timetable is loaded by migrations/0003_campus_shuttle.sql.
+-- Add campus-to-city buses (if any) on the Admin page.
 
 -- National helplines are real. Campus and local numbers are PLACEHOLDERS (90000 ...).
 insert into public.contacts (grp, name, number, note, emergency, sort) values

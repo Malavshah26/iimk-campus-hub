@@ -240,3 +240,8 @@ table.adm td.tm b{display:block;color:var(--ink)}
 .comments{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--mut)}
 .foot a{color:var(--hi)}
 @media(max-width:760px){.grid.listfirst>form{order:2}}
+.dep.shuttle{grid-template-columns:5em minmax(0,1fr);align-items:start}
+.dep .route{font-size:15px;line-height:1.5}
+.dep .route small{color:var(--mut);font-size:13px;white-space:nowrap}
+table.shtable{min-width:0;width:100%}
+table.shtable td{font-size:14px;padding:4px 6px;border-bottom:1px solid var(--line)}

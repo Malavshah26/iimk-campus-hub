@@ -1,23 +1,76 @@
 import { useState } from 'react'
 import { useRef_ } from '../lib/ref'
 import { useTick } from '../lib/useLive'
-import { DAYS, inFmt, isWeekend, mins, norm, nowMin } from '../lib/util'
+import { DAYS, inFmt, isWeekend, local, mins, norm, nowMin, saveLocal } from '../lib/util'
+import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf, type Leg } from '../lib/shuttle'
 import { Chips, Empty } from '../components/Bits'
 import { MealVote, useMealFeedback } from '../components/MealFeedback'
 
 export function Bus() {
+  const { ref } = useRef_()
+  if (!ref.shuttle.length && !ref.bus.length) return <section><div className="hd"><h2>Bus</h2></div><Empty>No bus timings yet. Council admins add them in Admin → Bus.</Empty></section>
+  return <section>{ref.shuttle.length > 0 && <Shuttle />}{ref.bus.length > 0 && <CityBus />}</section>
+}
+
+function Shuttle() {
+  useTick()
+  const { ref } = useRef_()
+  const stops = stopsOf(ref.shuttle)
+  const [from, setFromRaw] = useState(() => { const s = local('hub.stop', DEFAULT_STOP); return stops.includes(s) ? s : stops[0] })
+  const [to, setTo] = useState('')
+  const [early, setEarly] = useState(false)
+  const [table, setTable] = useState(false)
+  const setFrom = (s: string) => { setFromRaw(s); saveLocal('hub.stop', s); if (s === to) setTo('') }
+  const nm = nowMin()
+  const legs = legsFrom(ref.shuttle.filter(t => runsToday(t)), from, to)
+  const past = legs.filter(l => mins(l.at) < nm)
+  const next = legs.find(l => mins(l.at) >= nm)
+  const shown = early ? legs : legs.filter(l => mins(l.at) >= nm)
+  const extra = (l: Leg, isNext: boolean, gone: boolean) => [
+    isNext ? 'Next · in ' + inFmt(mins(l.at) - nm) : gone ? 'Gone' : '',
+    l.trip.note || '',
+    l.i > 0 ? `starts at ${l.trip.stops[0]} ${showTime(l.trip.depart)}` : '',
+  ].filter(Boolean).join(' · ')
+  return (
+    <div>
+      <div className="hd"><div><h2>Campus shuttle</h2><p className="sub">Pick your stop; the next shuttle is highlighted. Times marked ≈ are estimates (about 5 min between stops).</p></div></div>
+      <span className="lab">I’m at</span>
+      <Chips label="From stop" value={from} onChange={setFrom} options={stops.map(s => [s, s] as [string, string])} />
+      <span className="lab">Going to</span>
+      <Chips label="To stop" value={to} onChange={setTo} options={[['', 'Anywhere'] as [string, string], ...stops.filter(s => s !== from).map(s => [s, s] as [string, string])]} />
+      {past.length > 0 && <p style={{ margin: '0 0 8px' }}><button className="linkbtn" type="button" onClick={() => setEarly(!early)}>{early ? 'Hide' : 'Show'} earlier today ({past.length})</button></p>}
+      <div>
+        {shown.length ? shown.map(l => {
+          const gone = mins(l.at) < nm, isNext = l === next
+          return <div key={l.trip.id} className={'dep shuttle' + (gone ? ' past' : '') + (isNext ? ' next' : '')}>
+            <b>{l.est ? '≈' : ''}{showTime(l.at)}</b>
+            <div>
+              <div className="route">{l.rest.map((r, k) => <span key={k}>→ {r.stop} <small>{r.est ? '≈' : ''}{showTime(r.t)}</small> </span>)}</div>
+              <small>{extra(l, isNext, gone)}</small>
+            </div>
+          </div>
+        }) : <Empty>{legs.length ? 'No more shuttles from here today.' : 'No shuttle goes that way.'}</Empty>}
+      </div>
+      <button className="btn inline" type="button" style={{ marginTop: 14 }} onClick={() => setTable(!table)}>{table ? 'Hide' : 'Show'} full timetable</button>
+      {table && <div className="scroll" style={{ marginTop: 10 }}><table className="adm shtable"><thead><tr><th>Leaves</th><th>Route</th></tr></thead><tbody>
+        {ref.shuttle.map(t => <tr key={t.id}><td className="tm"><b>{showTime(t.depart)}</b></td><td>{t.stops.map((s, i) => <span key={i}>{i ? ' → ' : ''}{s}{i && t.at[i] ? ` (${showTime(t.at[i])})` : ''}</span>)}{t.note ? <small className="meta"> · {t.note}</small> : null}</td></tr>)}
+      </tbody></table></div>}
+    </div>
+  )
+}
+
+function CityBus() {
   useTick()
   const { ref } = useRef_()
   const todayType = isWeekend() ? 'weekend' : 'weekday'
   const [type, setType] = useState<'weekday' | 'weekend'>(todayType)
   const nm = nowMin()
-  const col = (dir: 'out' | 'in', title: string, via: string) => {
+  const col = (dir: 'out' | 'in', title: string) => {
     const list = ref.bus.filter(b => b.day_type === type && b.direction === dir).map(b => b.time).sort()
     const next = type === todayType ? list.find(x => mins(x) >= nm) : undefined
     return (
       <div>
         <div className="hd"><h3>{title}</h3></div>
-        <div className="meta" style={{ margin: '-6px 0 8px' }}>{via}</div>
         {list.length ? list.map(x => {
           const past = type === todayType && mins(x) < nm
           return <div key={dir + x} className={'dep' + (past ? ' past' : '') + (x === next ? ' next' : '')}>
@@ -27,11 +80,11 @@ export function Bus() {
     )
   }
   return (
-    <section>
-      <div className="hd wrap"><div><h2>Campus bus</h2><p className="sub">Next departure is highlighted.</p></div>
+    <div style={{ marginTop: 28 }}>
+      <div className="hd wrap"><div><h2>City bus</h2><p className="sub">Campus ↔ city, from the main gate.</p></div>
         <Chips label="Days" value={type} onChange={setType} options={[['weekday', 'Mon–Fri'], ['weekend', 'Sat–Sun']]} /></div>
-      <div className="cols">{col('out', 'Campus → City', 'From the main gate')}{col('in', 'City → Campus', 'Back to the main gate')}</div>
-    </section>
+      <div className="cols">{col('out', 'Campus → City')}{col('in', 'City → Campus')}</div>
+    </div>
   )
 }
 

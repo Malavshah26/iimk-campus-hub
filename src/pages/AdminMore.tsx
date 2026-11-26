@@ -7,6 +7,7 @@ import { useLive } from '../lib/useLive'
 import type { Facility, MealSummary, Year } from '../lib/types'
 import { dayLabel, dstr, today } from '../lib/util'
 import { Empty, ErrorNote, Loading } from '../components/Bits'
+import { parseShuttle, showTime } from '../lib/shuttle'
 
 type Res = PromiseLike<{ error: { message: string } | null }>
 
@@ -272,6 +273,54 @@ export function UsageAdmin() {
           <button className="btn pri inline" type="button" disabled={busy} onClick={clean}>{busy ? 'Cleaning…' : 'Clean up now'}</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- Campus shuttle */
+
+export function ShuttleAdmin() {
+  const { ref, reload } = useRef_()
+  const toast = useToast()
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const { trips, errors } = parseShuttle(text)
+
+  const replace = async () => {
+    if (!trips.length || !confirm(`Replace the whole shuttle timetable (${ref.shuttle.length} trips) with these ${trips.length} trips?`)) return
+    setBusy(true)
+    const del = await supabase.from('shuttle_trips').delete().gte('id', 0)
+    const ins = del.error ? del : await supabase.from('shuttle_trips').insert(trips)
+    setBusy(false)
+    toast(ins.error ? 'Error: ' + explain(ins.error.message) : `Shuttle timetable updated: ${trips.length} trips.`)
+    if (!ins.error) setText('')
+    reload()
+  }
+  const remove = async (id: number) => {
+    const { error } = await supabase.from('shuttle_trips').delete().eq('id', id)
+    toast(error ? 'Error: ' + explain(error.message) : 'Trip removed.')
+    reload()
+  }
+
+  return (
+    <div className="panel" style={{ marginBottom: 24 }}>
+      <h3>Campus shuttle</h3>
+      <p className="note">When a new bus sheet comes out, copy its rows from Excel (Time, From, To, To, Extended to; the Sl. No. column is fine) and paste here. Times in brackets after a stop, like “Phase V Campus (11.55 am)”, are kept. “C&amp;D Housing &amp; Return to PGP” works too. 12:00 AM counts as the end of the day.</p>
+      <textarea aria-label="Pasted shuttle rows" rows={6} style={{ marginTop: 10, fontFamily: 'ui-monospace,monospace', fontSize: 14 }} value={text} onChange={e => setText(e.target.value)}
+        placeholder={'8:55 AM\tC&D Housing\tPhase V Campus\tPGP Auditorium\n11.45 AM\tMaingate\tC&D Housing\tPhase V Campus (11.55 am)\tPGP Auditorium'} />
+      {text.trim() && <>
+        <p className="note">{trips.length} trips read{errors.length ? `, ${errors.length} line(s) skipped:` : '. Check a few below, then replace.'}</p>
+        {errors.length > 0 && <ul className="note err">{errors.slice(0, 6).map(e => <li key={e}>{e}</li>)}</ul>}
+        {trips.length > 0 && <ul className="note">{trips.slice(0, 4).map((t, i) => <li key={i}><b>{showTime(t.depart)}</b> {t.stops.map((s, k) => s + (t.at[k] && k ? ` (${showTime(t.at[k])})` : '')).join(' → ')}</li>)}{trips.length > 4 && <li>…</li>}</ul>}
+        <button className="btn pri inline" style={{ marginTop: 10 }} type="button" disabled={busy || !trips.length} onClick={replace}>{busy ? 'Saving…' : `Replace timetable with ${trips.length} trips`}</button>
+      </>}
+      <details style={{ marginTop: 14 }}>
+        <summary className="lab" style={{ cursor: 'pointer' }}>Current trips ({ref.shuttle.length})</summary>
+        <div className="list" style={{ marginTop: 8, gap: 4 }}>{ref.shuttle.map(t => <div className="ch" key={t.id}>
+          <span className="meta" style={{ margin: 0 }}><b>{showTime(t.depart)}</b> {t.stops.join(' → ')}{t.note ? ` · ${t.note}` : ''}</span>
+          <button className="linkbtn" type="button" onClick={() => remove(t.id)}>remove</button>
+        </div>)}</div>
+      </details>
     </div>
   )
 }

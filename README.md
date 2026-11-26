@@ -8,7 +8,7 @@ One web app for everyday campus life at IIM Kozhikode, run by the Students' Coun
 | **Notices** | Council announcements, pinned notices as a banner, unread badge |
 | **Events** | Anyone can post club events and talks; flags clashes with other events and with *your* classes, shows organisers which sections have class at that time; “I’m going”, Google Calendar / .ics |
 | **Mess menu** | Weekly menu with what’s on now; 👍/👎 per meal (totals for all, comments only for the council) |
-| **Bus** | Campus bus timetable, next departure highlighted |
+| **Bus** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): pick your stop and destination, next shuttle highlighted; city buses if any |
 | **Laundry** | Live washing-machine status for all 17 hostels, queues, fault reports, “wash done” notification |
 | **Carpool** | Post where and when you’re going; see rides going the same way, with Google Maps directions |
 | **Book a room** | Discussion rooms and courts: day view, tap a free slot, no double bookings, fair-use limits |
@@ -45,6 +45,8 @@ npm run dev
 ```
 supabase/migrations/0001_init.sql   tables, access rules, photo storage, live updates
 supabase/migrations/0002_campus_life.sql  notices, events, complaints, mess feedback, booking, admin tools
+supabase/migrations/0003_campus_shuttle.sql  campus shuttle + timetable w.e.f. 09.06.2026
+supabase/menus/                     monthly mess menus (run the latest in the SQL editor)
 supabase/seed.sql                   hostels, class timings, sample menu/bus/contacts
 supabase/seed_timetable.sql         SAMPLE timetable (regenerate: npm run seed:timetable)
 src/pages/                          one file per tab

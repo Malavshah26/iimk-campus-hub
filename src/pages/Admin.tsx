@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import type { BusTime, Contact, Hostel, Slot, Year } from '../lib/types'
 import { Chips } from '../components/Bits'
-import { AdminsAdmin, FacilitiesAdmin, FeedbackAdmin, TimetableImport, UsageAdmin } from './AdminMore'
+import { AdminsAdmin, FacilitiesAdmin, FeedbackAdmin, ShuttleAdmin, TimetableImport, UsageAdmin } from './AdminMore'
 
 type Tab = 'timetable' | 'mess' | 'feedback' | 'bus' | 'contacts' | 'hostels' | 'facilities' | 'slots' | 'admins' | 'usage'
 const DAYNAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -21,7 +21,7 @@ export function Admin() {
       <p className="note" style={{ margin: '0 0 12px' }}>Notices are posted from the Notices tab; complaint replies from the Complaints tab.</p>
       {tab === 'timetable' && <TimetableAdmin />}
       {tab === 'mess' && <MessAdmin />}
-      {tab === 'bus' && <BusAdmin />}
+      {tab === 'bus' && <><ShuttleAdmin /><h3>City bus (campus ↔ city)</h3><BusAdmin /></>}
       {tab === 'contacts' && <ContactsAdmin />}
       {tab === 'hostels' && <HostelsAdmin />}
       {tab === 'slots' && <SlotsAdmin />}

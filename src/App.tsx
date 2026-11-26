@@ -9,6 +9,7 @@ import { DAYS, inFmt, isWeekend, local, mins, nowMin, saveLocal } from './lib/ut
 import { Login, NotConfigured } from './pages/Login'
 import { ProfileForm } from './pages/Profile'
 import { washerState } from './lib/washer'
+import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf } from './lib/shuttle'
 import { isLive, unseenCount, useNotices } from './lib/notices'
 import { Badge, Loading } from './components/Bits'
 import { Notifier } from './components/Notifier'
@@ -62,6 +63,10 @@ function NowBoard() {
   const c = classes.find(x => mins(x.ends) > nm)
   const busList = ref.bus.filter(b => b.day_type === (isWeekend() ? 'weekend' : 'weekday') && b.direction === 'out').map(b => b.time).sort()
   const bus = busList.find(t => mins(t) >= nm)
+  const stops = stopsOf(ref.shuttle)
+  const saved = local('hub.stop', DEFAULT_STOP)
+  const stop = stops.includes(saved) ? saved : stops[0]
+  const shuttle = stop ? legsFrom(ref.shuttle.filter(t => runsToday(t)), stop).find(l => mins(l.at) >= nm) : undefined
   const meal = ref.meals.find(m => nm >= mins(m.starts) && nm < mins(m.ends))
   const nextMeal = meal || ref.meals.find(m => mins(m.starts) > nm)
   const dish = nextMeal ? (ref.menu.find(r => r.day === DAYS[new Date().getDay()] && r.meal === nextMeal.meal)?.items || '').split(',')[0] : ''
@@ -70,7 +75,9 @@ function NowBoard() {
   const free = h ? Array.from({ length: h.machines }, (_, i) => `${h.code}-${i + 1}`).filter(id => washerState(byId.get(id)) === 'free').length : 0
   const tiles: [string, string, string, string][] = [
     ['#classes', c && mins(c.starts) <= nm ? 'Class on now' : 'Next class', c ? (mins(c.starts) <= nm ? 'till ' + c.ends : c.starts) : 'All done', c ? c.name : 'no more classes today'],
-    ['#bus', 'Next bus to city', bus || 'No more', bus ? 'in ' + inFmt(mins(bus) - nm) : 'check tomorrow’s times'],
+    ref.shuttle.length
+      ? ['#bus', 'Shuttle from ' + stop, shuttle ? showTime(shuttle.at) : 'No more', shuttle ? `in ${inFmt(mins(shuttle.at) - nm)} → ${shuttle.rest[0].stop}` : 'check tomorrow’s times']
+      : ['#bus', 'Next bus to city', bus || 'No more', bus ? 'in ' + inFmt(mins(bus) - nm) : 'check tomorrow’s times'],
     ['#mess', meal ? meal.label + ' now' : nextMeal ? 'Next: ' + nextMeal.label : 'Mess', meal ? 'till ' + meal.ends : nextMeal ? nextMeal.starts : 'Closed', dish || ' '],
     ['#laundry', h ? `Washers, hostel ${h.code}` : 'Washers', h ? `${free} of ${h.machines}` : 'Set hostel', h ? 'free right now' : 'in your profile'],
   ]

@@ -2,9 +2,11 @@
 
 About 30 minutes. You need: a GitHub account (this repository), a free [Supabase](https://supabase.com) account and a free [Vercel](https://vercel.com) account. Use a shared Students' Council email for Supabase and Vercel if you can, so the next council can take over.
 
-> **Already set up before update 2?** Only do this: Supabase → **SQL Editor → New query**, paste the whole of
-> `supabase/migrations/0002_campus_life.sql`, click **Run**. That adds Notices, Events, Complaints, Mess feedback,
-> Room booking and the admin tools. Until it's run, those tabs say they need the database update; everything else keeps working.
+> **Already set up?** Run any migration you haven't run yet, in order (Supabase → **SQL Editor → New query**, paste the
+> whole file, **Run**; if Supabase warns about "destructive operations", click **Run this query**):
+> `0002_campus_life.sql` (notices, events, complaints, mess feedback, room booking, admin tools) and
+> `0003_campus_shuttle.sql` (campus shuttle timetable). Until then the new parts say they need the database update;
+> everything else keeps working.
 
 ---
 
@@ -22,10 +24,12 @@ In the Supabase dashboard open **SQL Editor → New query**, then run these file
 
 1. `supabase/migrations/0001_init.sql`: tables, access rules, photo storage
 2. `supabase/migrations/0002_campus_life.sql`: notices, events, complaints, mess feedback, room booking, admin tools
-3. `supabase/seed.sql`: hostels, class timings, sample menu, bus times and contacts
-4. `supabase/seed_timetable.sql`: a **sample** timetable for every section
+3. `supabase/migrations/0003_campus_shuttle.sql`: campus shuttle, with the timetable w.e.f. 09.06.2026
+4. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
+5. `supabase/seed_timetable.sql`: a **sample** timetable for every section
+6. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
 
-Each should finish with "Success. No rows returned". Running a file twice is harmless for 0002 and the seeds.
+Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002, 0003 and the seeds.
 
 ## 3. Check the email domain
 
@@ -101,7 +105,9 @@ Reload the site: an **Admin** button appears in the header. From now on, add or 
 On the **Admin** page:
 
 - **Timetable:** easiest is a spreadsheet. Make columns **Year, Section, Day, Period, Code, Course, Room** (Period = 1–6 or a start time like 09:15), copy the rows, paste them into **Import from a spreadsheet**, check the preview, **Import**. *Download current timetable (CSV)* gives you a starting file. You can also edit one section at a time in the grid.
-- **Mess menu**, **Bus**, **Contacts:** replace placeholders. Campus numbers starting `90000` are fake.
+- **Mess menu:** each month, either run a menu file like `supabase/menus/2026-11_mess_menu.sql` or edit it on the page. Check **Meal timings** at the bottom too.
+- **Bus:** the campus shuttle (PGP Auditorium, Phase V Campus, C&D Housing, Maingate) is loaded by 0003. When a new bus sheet comes out, copy its rows from Excel and paste them into **Admin → Bus → Campus shuttle**; it shows a preview and replaces the old timetable. City buses (if any) go below it.
+- **Contacts:** replace placeholders. Campus numbers starting `90000` are fake.
 - **Hostels:** set the real number of washing machines in each hostel.
 - **Facilities:** the rooms and courts students can book. The six listed are samples: rename, add, or untick *Bookable*.
 - **Class timings:** already set to 09:15 start, 75-minute classes, 20-minute breaks, lunch 13:40–14:40.

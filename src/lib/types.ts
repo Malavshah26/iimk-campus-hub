@@ -164,3 +164,5 @@ export interface Booking {
 }
 
 export interface MealSummary { day: string; meal: string; up: number; down: number; comments: string[] | null }
+
+export interface ShuttleTrip { id: number; depart: string; stops: string[]; at: string[]; days: 'all' | 'weekday' | 'weekend'; note: string | null }
