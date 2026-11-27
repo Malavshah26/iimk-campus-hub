@@ -8,6 +8,8 @@ import { dayLabel, today } from '../lib/util'
 import { attKey, reminderTime } from '../lib/attendance'
 import { myClasses } from '../lib/gcal'
 import { useRef_ } from '../lib/ref'
+import { MATCH_MIN, matchScore } from '../lib/lostfound'
+import type { LostItem } from '../lib/types'
 
 const STATUS: Record<string, string> = { open: 'open', progress: 'in progress', fixed: 'fixed' }
 
@@ -111,6 +113,22 @@ export function Notifier() {
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notices' }, ({ new: n }) => {
         alertRef.current('New notice', (n as { title: string }).title, 'notice')
+      })
+      // Lost & found: someone responded on my post.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'lost_replies', filter: `item_owner=eq.${uid}` }, async ({ new: r }) => {
+        const row = r as { item_id: string; user_id: string; kind: string; body: string }
+        if (row.user_id === uid) return
+        const { data: it } = await supabase.from('lost_items').select('item').eq('id', row.item_id).maybeSingle()
+        const what = row.kind === 'claim' ? 'Someone says it’s theirs' : row.kind === 'found' ? 'Someone found it' : row.kind === 'seen' ? 'Someone saw it' : 'New response'
+        alertRef.current(`${what}: ${(it as { item: string } | null)?.item || 'your post'}`, row.body.slice(0, 140), 'lfr' + row.item_id)
+      })
+      // Lost & found: a new post looks like one of my open ones.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'lost_items' }, async ({ new: n }) => {
+        const post = n as LostItem
+        if (post.user_id === uid) return
+        const { data } = await supabase.from('lost_items').select('id,kind,item,description,category,area,item_date,status,hidden').eq('user_id', uid).eq('status', 'open')
+        const hit = ((data as LostItem[] | null) || []).find(m => matchScore(post, m) >= MATCH_MIN)
+        if (hit) alertRef.current('Possible match', `${post.kind === 'found' ? 'Someone found' : 'Someone lost'} “${post.item}”, which looks like your “${hit.item}”. Check Lost & found.`, 'lfm' + post.id)
       })
       // Realtime only delivers polls this student can see (row-level security), i.e. ones meant for them.
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'polls' }, ({ new: p }) => {

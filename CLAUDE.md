@@ -10,7 +10,7 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   sub-tabs that keep their own `#route`; a header opens its last-used tab (`hub.lastTab`). Group badges sum the tabs'.
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
 - No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life, 0003 shuttle,
-  0004 section sessions, 0005 contact emails, 0006 polls + birthdays). New
+  0004 section sessions, 0005 contact emails, 0006 polls + birthdays, 0007 lost & found). New
   schema changes go in a new numbered file that is safe to re-run (`if not exists`, `drop policy if exists`).
 - Server code (Vercel functions): `api/keepalive.js`, a daily cron calling `rpc/ping` so the free project doesn't
   pause; `api/ics.js`, which fetches a student's calendar .ics (campus JWT required, Google/Outlook hosts only).
@@ -75,6 +75,14 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   `contacts` rows in group `AUTO_GROUP` ('Autos & taxis', `src/lib/autos.ts`), pasted in Admin → Transport
   (`parseAutos()`); Contacts hides that group unless searching. The repo is public, so drivers' numbers are entered in
   the app, never committed (no real names/numbers in code, tests or comments).
+- Lost & found (0007, `src/pages/LostFound.tsx`, `src/lib/lostfound.ts`; ideas from the owner's separate "IIMK Lost & Found"
+  Claude artifact): `lost_items` gained category, area (campus place code), time_of_day, held_at (finder/security/admin, found
+  only), contact, ref (LF-YYMM-XXXX, set by trigger), status open|done(reunited)|closed(unclaimed), resolved_at, hidden.
+  `lost_items_guard` trigger: new posts always open/visible with a fresh ref; only admins hide; ref/poster never change; no
+  future dates. Hidden posts are readable only by poster + admins. `lost_replies` (claim/found/seen/note, `item_owner` filled
+  by trigger for notifications) and `lost_flags` (reports; only reporter + admins read) cascade with the post. Matching is
+  client-side `matchScore()`: same category +3, same area +1, shared words up to +4, found-before-lost-2-days = 0, show at
+  >= 5. Notifier alerts on replies to my posts and on new posts matching my open ones. Views: Board / My posts / Desk (admins).
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
   open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables

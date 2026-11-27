@@ -33,14 +33,28 @@ export interface LostItem {
   user_id: string
   kind: 'lost' | 'found'
   item: string
+  /** Exact spot, free text ("2nd floor, near the printers"). */
   place: string | null
   item_date: string
   description: string | null
   photo_path: string | null
-  status: 'open' | 'done'
+  /** done = reunited with its owner; closed = closed, unclaimed. */
+  status: 'open' | 'done' | 'closed'
   created_at: string
   poster: Person | null
+  // Added by migration 0007 (absent on older databases).
+  category?: string
+  area?: string | null
+  time_of_day?: string
+  held_at?: 'finder' | 'security' | 'admin' | null
+  contact?: string | null
+  ref?: string
+  resolved_at?: string | null
+  hidden?: boolean
+  hidden_reason?: string | null
 }
+export interface LostReply { id: string; item_id: string; user_id: string; kind: 'claim' | 'found' | 'seen' | 'note'; body: string; created_at: string; who: { name: string } | null }
+export interface LostFlag { item_id: string; user_id: string; reason: string; created_at: string }
 
 export type ListingKind = 'sell' | 'rent' | 'want'
 export interface Listing {

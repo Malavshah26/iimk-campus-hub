@@ -16,7 +16,7 @@ Six main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls
 | **Laundry** | Live washing-machine status for all 17 hostels, queues, fault reports, “wash done” notification |
 | **Carpool** | Post where and when you’re going; see rides going the same way, with Google Maps directions |
 | **Book a room** | Discussion rooms and courts: day view, tap a free slot, no double bookings, fair-use limits |
-| **Lost & found** | Post lost or found items with photos; contact on WhatsApp; mark returned |
+| **Lost & found** | Post lost or found items with photo, category, campus place and time; each gets a code like LF-2611-X4EK. The board suggests lost↔found matches (and notifies you of new ones), people respond ("This is mine", "I found it") or WhatsApp the poster, finders say where the item is now (with them, security, admin office). Mark reunited; report bad posts; council **Desk** to hide reports, hand over desk items and close old posts |
 | **Buy & sell** | Sell, rent out or ask for books, cycles, coolers, room items, with photos |
 | **Complaints** | Hostel, Wi-Fi, mess… issues with “me too” votes; council sets open / in progress / fixed and replies |
 | **Contacts** | Emergency helplines and IIMK offices, tap to call or email |

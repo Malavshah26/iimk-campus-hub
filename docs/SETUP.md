@@ -7,7 +7,8 @@ About 30 minutes. You need: a GitHub account (this repository), a free [Supabase
 > `0002_campus_life.sql` (notices, events, complaints, mess feedback, room booking, admin tools) and
 > `0003_campus_shuttle.sql` (campus shuttle timetable), `0004_section_sessions.sql` (section timetables filled from
 > students' synced calendars), `0005_contact_emails.sql` (emails on contacts, real IIMK office numbers), `0006_polls_birthdays.sql`
-> (polls and elections, opt-in birthdays). Until then the new parts say they need the database update;
+> (polls and elections, opt-in birthdays), `0007_lost_found.sql` (categories, places, matches, responses and reports in
+> Lost & found). Until then the new parts say they need the database update;
 > everything else keeps working.
 
 ---
@@ -30,11 +31,12 @@ In the Supabase dashboard open **SQL Editor → New query**, then run these file
 4. `supabase/migrations/0004_section_sessions.sql`: section timetables shared from students' synced calendars
 5. `supabase/migrations/0005_contact_emails.sql`: emails on contacts, plus the real IIMK office numbers
 6. `supabase/migrations/0006_polls_birthdays.sql`: polls and secret-ballot elections, opt-in section birthdays
-7. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
-8. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
-9. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
+7. `supabase/migrations/0007_lost_found.sql`: Lost & found with categories, places, reference codes, matches, responses and reports
+8. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
+9. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
+10. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
 
-Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002–0006 and the seeds.
+Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002–0007 and the seeds.
 
 ## 3. Check the email domain
 
@@ -115,6 +117,7 @@ On the **Admin** page:
   **Auto and taxi drivers:** paste the drivers' list (e.g. the WhatsApp message, one "Name. +91…" per line) into **Admin → Transport → Autos & taxis**, check the preview, save. The numbers are kept only in the database, not in this public repository. City buses (if any) go at the bottom.
 - **Contacts:** the IIMK office numbers and emails come from migration 0005. Add more (security, medical centre, mess office, computer centre, library) in **Admin → Contacts**; several emails can go in one contact, separated by commas.
 - **Polls & elections:** start them from the **Polls** tab (admins see a form). *Quick poll*: one choice each, changeable until it closes, results after voting. *Election*: secret ballot, one final vote each, results only after closing; the database stores that someone voted separately from what they voted, so not even admins can link the two. **Who voted** lists voters (names only) so you can check eligibility. Voting by section relies on the section students set in their profile.
+- **Lost & found:** council admins get a **Desk** view (Market → Lost & found → Desk): posts students reported (hide or dismiss), found items handed to security or the admin office (**Handed to owner**), posts open for 30+ days (**Close as unclaimed**) and hidden posts. Old reunited and closed posts are removed by **Usage & clean-up**.
 - **Hostels:** set the real number of washing machines in each hostel.
 - **Facilities:** the rooms and courts students can book. The six listed are samples: rename, add, or untick *Bookable*.
 - **Class timings:** already set to 09:15 start, 75-minute classes, 20-minute breaks, lunch 13:40–14:40.
