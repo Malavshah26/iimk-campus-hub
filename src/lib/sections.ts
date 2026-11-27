@@ -105,11 +105,16 @@ export function sectionClasses(ref: RefData, date: Date, year: string, section: 
 /** Shares this student's own-section class sessions from their calendar. Returns how many were saved. */
 export async function shareFromCalendar(cal: CalState, year: string, section: string): Promise<number> {
   const [from, to] = shareWindow()
+  // One row per day + start + course: the database rejects the whole sync if a session is sent twice.
+  const seen = new Set<string>()
   const rows = cal.events.flatMap(e => {
     const s = parseSessionTitle(e.title)
-    const day = dstr(new Date(e.start))
+    const day = dstr(new Date(e.start)), starts = hhmm(e.start)
     if (!s || s.section.toUpperCase() !== section.toUpperCase() || day < from || day > to) return []
-    return [{ day, starts: hhmm(e.start), ends: hhmm(e.end), code: s.code, session: s.session, faculty: s.faculty, room: s.room }]
+    const k = `${day}|${starts}|${s.code.slice(0, 20)}`
+    if (seen.has(k)) return []
+    seen.add(k)
+    return [{ day, starts, ends: hhmm(e.end), code: s.code, session: s.session, faculty: s.faculty, room: s.room }]
   })
   if (rows.length < 3) return 0
   const { data, error } = await supabase.rpc('sync_section_sessions', { p_from: from, p_to: to, p_rows: rows })

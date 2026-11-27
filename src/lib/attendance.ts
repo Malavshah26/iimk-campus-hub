@@ -10,7 +10,9 @@ export const attKey = (ys: string, date: string, c: Pick<ClassItem, 'slot' | 'st
 export async function markMany(uid: string, items: { key: string; code: string }[], status: 'y' | 'n'): Promise<string | null> {
   if (!items.length) return null
   const now = new Date().toISOString()
-  const { error } = await supabase.from('attendance').upsert(items.map(i => ({ user_id: uid, key: i.key, course_code: i.code, status, updated_at: now })))
+  // A key sent twice in one upsert fails the whole request, so send each key once.
+  const once = [...new Map(items.map(i => [i.key, i])).values()]
+  const { error } = await supabase.from('attendance').upsert(once.map(i => ({ user_id: uid, key: i.key, course_code: i.code, status, updated_at: now })))
   return error ? error.message : null
 }
 

@@ -159,13 +159,14 @@ function MyTimetable() {
             <button className="btn" type="button" onClick={() => markAll('n')}>Missed all</button>
           </span>
         </div>}
-        {list.length ? list.map(c => {
+        {list.length ? list.map((c, i) => {
           const key = attKey(ys, selected, c)
           const v = att[key]?.status
           const future = selected > t || (selected === t && mins(c.starts) > nm)
           const live = selected === t && nm >= mins(c.starts) && nm < mins(c.ends)
           return (
-            <div key={key} className={'cls' + (live ? ' now' : '')}>
+            // Two classes can share a period (and so an attendance key); the row key must still be unique.
+            <div key={key + '#' + i} className={'cls' + (live ? ' now' : '')}>
               <div><b className="t">{c.starts}</b><small>till {c.ends}</small></div>
               <div><h3>{c.name}</h3><div className="meta">{[c.name !== c.code && c.code, c.detail, c.room].filter(Boolean).join(' · ')}{live && <> · <b>On now</b></>}</div></div>
               <div className="att">

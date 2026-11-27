@@ -117,7 +117,8 @@ export function myClasses(ref: RefData, date: Date, year: string, section: strin
   // The calendar is the source of truth: its titles group attendance by course.
   const names = new Map<string, string>()
   for (const r of ref.timetable) if (!names.has(r.course_code.toLowerCase()) || (r.year === year && r.section === section)) names.set(r.course_code.toLowerCase(), r.course_name)
-  return calEventsOn(state, date).map(e => {
+  const seen = new Set<string>()
+  return calEventsOn(state, date).map((e): ClassItem => {
     const starts = hhmm(e.start), ends = hhmm(e.end)
     const slot = ref.slots.find(s => overlaps(starts, ends, s.starts, s.ends))?.slot || 0
     const s = parseSessionTitle(e.title) // "Session No: 15 - EE(C)-LME-(CR B1)"
@@ -126,6 +127,12 @@ export function myClasses(ref: RefData, date: Date, year: string, section: strin
       room: s.room ? 'Room ' + s.room : e.location || null, detail: [`Session ${s.session}`, s.faculty].filter(Boolean).join(' · '),
     }
     return { slot, starts, ends, code: courseKey(e.title), name: e.title, room: e.location || null }
+  }).filter(c => {
+    // Two invites that read the same (e.g. one per section of a combined class) are one class.
+    const k = [c.starts, c.ends, c.code, c.detail, c.room].join('|')
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
   })
 }
 

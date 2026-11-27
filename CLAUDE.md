@@ -43,7 +43,8 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   = session 15, course EE, Section C, faculty initials LME, classroom B1 ("CR" = classroom; rooms A1–A4, B1–B4,
   C1–C4, C6, MDC, ...). `src/lib/sessionTitle.ts` parses them so attendance groups by course code (EE, CMA, OS,
   CF, LEPM) and rooms show as "Room B1"; full course names come from the timetable table if an admin has entered
-  matching codes. First connect auto-filters to "Session No" when the calendar has other events; Classes offers
+  matching codes. Duplicate invites (same time + title, or same-looking class) are merged in `parseIcs()` / `myClasses()`;
+  class rows need unique React keys because two classes can share an attendance key. First connect auto-filters to "Session No" when the calendar has other events; Classes offers
   to fix the profile section if it differs from the calendar's section. The owner is in Section C. The owner's classes live in their
   @iimk.ac.in Google account, not the personal Gmail connected to Claude.
 - Section timetables (0004 `section_sessions`): after a calendar sync, `useShareSessions` sends the student's

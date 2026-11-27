@@ -144,5 +144,12 @@ export function parseIcs(text: string, from: number, to: number): CalEvent[] {
     const skip = new Set([...r.exdates, ...(replaced.get(r.uid) || [])])
     for (const s of expand(r.start.ms, r.rrule, from, to)) if (!skip.has(s)) add(s)
   }
-  return out.sort((a, b) => a.start - b.start)
+  // The same invite can be in a calendar twice (sent twice, or under a new UID): keep one copy.
+  const seen = new Set<string>()
+  return out.sort((a, b) => a.start - b.start).filter(e => {
+    const k = `${e.start}|${e.end}|${e.title.replace(/\s+/g, ' ').trim().toLowerCase()}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
 }
