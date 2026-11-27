@@ -43,6 +43,8 @@ function MyTimetable() {
   const toast = useToast()
   const [year, setYear] = useState<Year>(profile.year)
   const [section, setSection] = useState(profile.section)
+  // Follow the profile if the student changes their section (e.g. "Switch my profile to Section C").
+  useEffect(() => { setYear(profile.year); setSection(profile.section) }, [profile.year, profile.section])
   const [woff, setWoff] = useState(0)
   const [day, setDay] = useState(today())
   const [att, setAtt] = useState<Record<string, AttendanceRow>>({})
@@ -69,8 +71,11 @@ function MyTimetable() {
   useSessions([[year, section]], dstr(days[0]), dstr(days[days.length - 1]))
   const t = today()
   const selected = days.some(d => dstr(d) === day) ? day : (days.some(d => dstr(d) === t) ? t : dstr(days[0]))
-  // With a calendar, your own sessions (and your profile's year/section for attendance).
-  const ys = fromCal ? profile.year + profile.section : year + section
+  // Attendance always belongs to your own year/section (from your profile). Other sections'
+  // timetables can be browsed, but not marked.
+  const ys = profile.year + profile.section
+  const own = fromCal || (year === profile.year && section === profile.section)
+  const mySec = `${profile.year === '1' ? 'Year 1' : 'Year 2'} · ${sectionLabel(profile.section)}`
   const list = fromCal ? myClasses(ref, new Date(selected + 'T00:00'), profile.year, profile.section) : sectionClasses(ref, new Date(selected + 'T00:00'), year, section)
   const shared = !fromCal && days.some(d => sessionsOn(year, section, dstr(d)) !== null)
   const sharedAt = shared ? sessionsUpdated(year, section) : null
@@ -90,7 +95,7 @@ function MyTimetable() {
   }
 
   // Classes on the selected day that have started and aren't marked yet.
-  const todo = list.filter(c => (selected < t || (selected === t && mins(c.starts) <= nm)) && !att[attKey(ys, selected, c)])
+  const todo = own ? list.filter(c => (selected < t || (selected === t && mins(c.starts) <= nm)) && !att[attKey(ys, selected, c)]) : []
   const markAll = async (v: 'y' | 'n') => {
     const items = todo.map(c => ({ key: attKey(ys, selected, c), code: c.code }))
     const next = { ...att }
@@ -123,7 +128,7 @@ function MyTimetable() {
   }, [att, prefix])
   const tot = Object.values(agg).reduce((s, x) => ({ y: s.y + x.y, t: s.t + x.t }), { y: 0, t: 0 })
   const pct = (x: { y: number; t: number }) => (x.t ? Math.round((x.y * 100) / x.t) : 0)
-  const courseNames = new Map(ref.timetable.filter(r => r.year === year && r.section === section).map(r => [r.course_code, r.course_name]))
+  const courseNames = new Map(ref.timetable.filter(r => r.year === profile.year && r.section === profile.section).map(r => [r.course_code, r.course_name]))
 
   return (
     <div className="grid tt">
@@ -140,6 +145,9 @@ function MyTimetable() {
             <select id="t-sec" value={section} onChange={e => setSection(e.target.value)}>
               {ref.sections.map(s => <option key={s.code} value={s.code}>{s.label}</option>)}
             </select></div>
+        </div>}
+        {!own && <div className="status show">
+          You’re viewing {year === '1' ? 'Year 1' : 'Year 2'} · {sectionLabel(section)}. Attendance can only be marked for your own section ({mySec}). <button className="linkbtn" type="button" onClick={() => { setYear(profile.year); setSection(profile.section) }}>Back to my section</button>
         </div>}
         <div className="wk">
           <button className="btn" type="button" aria-label="Previous week" onClick={() => setWoff(w => w - 1)}>‹</button>
@@ -169,7 +177,7 @@ function MyTimetable() {
               <div><b className="t">{c.starts}</b><small>till {c.ends}</small></div>
               <div><h3>{c.name}</h3><div className="meta">{[c.name !== c.code && c.code, c.detail, c.room].filter(Boolean).join(' · ')}{live && <> · <b>On now</b></>}</div></div>
               <div className="att">
-                {future ? <button disabled>Upcoming</button> : <>
+                {!own ? null : future ? <button disabled>Upcoming</button> : <>
                   <button className={v === 'y' ? 'y' : ''} aria-pressed={v === 'y'} onClick={() => mark(key, c.code, 'y')}>Attended</button>
                   <button className={v === 'n' ? 'n' : ''} aria-pressed={v === 'n'} onClick={() => mark(key, c.code, 'n')}>Missed</button>
                 </>}
@@ -184,7 +192,7 @@ function MyTimetable() {
       {shared && <p className="note" style={{ gridColumn: '1 / -1', margin: '-8px 0 0' }}>{sectionLabel(section)} timetable from classmates’ synced calendars{sharedAt ? `, updated ${new Date(sharedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}.</p>}
       <aside className="panel stick">
         <h2>Your attendance</h2>
-        <p className="sub">{fromCal ? 'From your calendar' : `${year === '1' ? 'Year 1' : 'Year 2'} · ${sectionLabel(section)}`} · private to you</p>
+        <p className="sub">{fromCal ? 'From your calendar' : mySec} · private to you</p>
         {tot.t ? <>
           <div className="big">{pct(tot)}%</div>
           <div className="meta">{tot.y} of {tot.t} marked classes attended</div>
