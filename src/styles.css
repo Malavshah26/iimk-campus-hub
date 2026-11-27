@@ -446,3 +446,9 @@ button.hbtn{background:transparent;cursor:pointer;gap:6px;font-family:inherit}
 table.adm.ovtable{min-width:520px;border-spacing:0}
 table.adm.ovtable th,table.adm.ovtable td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
 @media(max-width:600px){.chk{grid-template-columns:28px minmax(0,1fr)}.chkacts{grid-column:2;justify-content:flex-start}}
+
+/* Classes: one view (your classes) with "See another section" */
+.viewbar{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;margin:0 0 12px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);font-size:14.5px}
+.viewbar b{font-weight:600}
+.viewbar.other{background:var(--pale);border-color:var(--hi)}
+.viewbar .btn{min-height:36px;padding:4px 12px;font-size:14px}

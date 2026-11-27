@@ -14,7 +14,6 @@ import { hhmm, local, overlaps, saveLocal } from './util'
 export interface CalState { url: string; filter: string; events: CalEvent[]; at: number; error: string | null }
 
 const KEY = 'hub.cal'
-const SOURCE = 'hub.classSource'
 const DAY = 86400000
 const STALE = 30 * 60000
 
@@ -72,7 +71,7 @@ export async function syncCal(url = state?.url || '', filter = state?.filter ?? 
   }
 }
 
-export const disconnectCal = () => { set(null); saveLocal(SOURCE, 'cal') }
+export const disconnectCal = () => set(null)
 export const setCalFilter = (filter: string) => { if (state) set({ ...state, filter }) }
 
 /** The calendar, re-rendering the component whenever it changes. */
@@ -97,10 +96,6 @@ export function useCalAutoSync() {
   }, [])
 }
 
-/** 'cal' (my Google Calendar) or 'tt' (section timetable). */
-export const classSource = (): 'cal' | 'tt' => local<'cal' | 'tt'>(SOURCE, 'cal')
-export const setClassSource = (s: 'cal' | 'tt') => { saveLocal(SOURCE, s); listeners.forEach(f => f()) }
-
 export function calEventsOn(cal: CalState, date: Date): CalEvent[] {
   const d0 = new Date(date)
   d0.setHours(0, 0, 0, 0)
@@ -110,11 +105,11 @@ export function calEventsOn(cal: CalState, date: Date): CalEvent[] {
 }
 
 /**
- * The student's classes on a date: from their calendar if connected (and chosen), otherwise the
- * section timetable. Calendar sessions are matched to class periods so attendance lines up.
+ * The student's classes on a date: from their calendar if connected, otherwise the section
+ * timetable. Calendar sessions are matched to class periods so attendance lines up.
  */
 export function myClasses(ref: RefData, date: Date, year: string, section: string, useCalendar = true): ClassItem[] {
-  if (!state || !useCalendar || classSource() !== 'cal') return sectionClasses(ref, date, year, section)
+  if (!state || !useCalendar) return sectionClasses(ref, date, year, section)
   // The calendar is the source of truth: its titles group attendance by course.
   const names = new Map<string, string>()
   for (const r of ref.timetable) if (!names.has(r.course_code.toLowerCase()) || (r.year === year && r.section === section)) names.set(r.course_code.toLowerCase(), r.course_name)

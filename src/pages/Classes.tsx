@@ -3,7 +3,7 @@ import { useAuth, useMe } from '../lib/auth'
 import { useRef_ } from '../lib/ref'
 import { attKey, markMany } from '../lib/attendance'
 import { sectionClasses, sessionsOn, sessionsUpdated, useSessions } from '../lib/sections'
-import { calendarSection, classSource, myClasses, setClassSource, useCal } from '../lib/gcal'
+import { calendarSection, myClasses, useCal } from '../lib/gcal'
 import { CalendarSync } from '../components/CalendarSync'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
@@ -49,10 +49,9 @@ function MyTimetable() {
   const [day, setDay] = useState(today())
   const [att, setAtt] = useState<Record<string, AttendanceRow>>({})
   const cal = useCal()
-  const fromCal = !!cal && classSource() === 'cal'
   const { reloadProfile } = useAuth()
   // "EE(C)" in the invites means Section C: offer to fix the profile if it says otherwise.
-  const calSec = ref.sections.find(s => s.code.toUpperCase() === calendarSection(fromCal ? cal : null))
+  const calSec = ref.sections.find(s => s.code.toUpperCase() === calendarSection(cal))
   const fixSection = async () => {
     if (!calSec) return
     const { error } = await supabase.from('profiles').update({ section: calSec.code, updated_at: new Date().toISOString() }).eq('id', uid)
@@ -71,10 +70,13 @@ function MyTimetable() {
   useSessions([[year, section]], dstr(days[0]), dstr(days[days.length - 1]))
   const t = today()
   const selected = days.some(d => dstr(d) === day) ? day : (days.some(d => dstr(d) === t) ? t : dstr(days[0]))
-  // Attendance always belongs to your own year/section (from your profile). Other sections'
-  // timetables can be browsed, but not marked.
+  // One view. By default: your own classes (from your Google Calendar if connected, else your section's
+  // timetable). "See another section" browses any section, view-only; attendance is always your own.
   const ys = profile.year + profile.section
-  const own = fromCal || (year === profile.year && section === profile.section)
+  const own = year === profile.year && section === profile.section
+  const fromCal = !!cal && own
+  const [picking, setPicking] = useState(false)
+  const backToMine = () => { setYear(profile.year); setSection(profile.section); setPicking(false) }
   const mySec = `${profile.year === '1' ? 'Year 1' : 'Year 2'} · ${sectionLabel(profile.section)}`
   const list = fromCal ? myClasses(ref, new Date(selected + 'T00:00'), profile.year, profile.section) : sectionClasses(ref, new Date(selected + 'T00:00'), year, section)
   const shared = !fromCal && days.some(d => sessionsOn(year, section, dstr(d)) !== null)
@@ -137,8 +139,15 @@ function MyTimetable() {
         {calSec && calSec.code !== profile.section && <div className="status show">
           Your calendar is for <b>{sectionLabel(calSec.code)}</b>, but your profile says {sectionLabel(profile.section)}. <button className="linkbtn" type="button" onClick={fixSection}>Switch my profile to {sectionLabel(calSec.code)}</button>
         </div>}
-        {cal && <Chips label="Source" value={fromCal ? 'cal' : 'tt'} onChange={v => setClassSource(v)} options={[['cal', 'My Google Calendar'], ['tt', 'Section timetable']]} />}
-        {!fromCal && <div className="sel">
+        <div className={'viewbar' + (own ? '' : ' other')}>
+          {own
+            ? <span>Your classes · <b>{mySec}</b>{fromCal ? <span className="meta"> · from your Google Calendar</span> : null}</span>
+            : <span>Viewing <b>{year === '1' ? 'Year 1' : 'Year 2'} · {sectionLabel(section)}</b> <span className="meta">· view only</span></span>}
+          {own
+            ? <button className="linkbtn" type="button" aria-expanded={picking} onClick={() => setPicking(!picking)}>{picking ? 'Done' : 'See another section'}</button>
+            : <button className="btn" type="button" onClick={backToMine}>Back to my section</button>}
+        </div>
+        {(picking || !own) && <div className="sel">
           <div><label className="lab" htmlFor="t-year">Year</label>
             <select id="t-year" value={year} onChange={e => setYear(e.target.value as Year)}><option value="1">Year 1</option><option value="2">Year 2</option></select></div>
           <div><label className="lab" htmlFor="t-sec">Section</label>
@@ -146,9 +155,7 @@ function MyTimetable() {
               {ref.sections.map(s => <option key={s.code} value={s.code}>{s.label}</option>)}
             </select></div>
         </div>}
-        {!own && <div className="status show">
-          You’re viewing {year === '1' ? 'Year 1' : 'Year 2'} · {sectionLabel(section)}. Attendance can only be marked for your own section ({mySec}). <button className="linkbtn" type="button" onClick={() => { setYear(profile.year); setSection(profile.section) }}>Back to my section</button>
-        </div>}
+        {!own && <p className="note" style={{ margin: '-4px 0 12px' }}>Attendance can only be marked for your own section ({mySec}).</p>}
         <div className="wk">
           <button className="btn" type="button" aria-label="Previous week" onClick={() => setWoff(w => w - 1)}>‹</button>
           <div className="chips" ref={el => { const c = el?.querySelector<HTMLElement>('.chip.on'); if (el && c) el.scrollLeft = c.offsetLeft - el.offsetLeft - (el.clientWidth - c.offsetWidth) / 2 }}>
