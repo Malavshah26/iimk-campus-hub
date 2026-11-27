@@ -48,8 +48,12 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   @iimk.ac.in Google account, not the personal Gmail connected to Claude.
 - Duplicate classes: real IIMK calendars contain the same invite twice (two UIDs, same title/time) and several sessions of
   one course stacked in one slot ("RIL(LSM)" sessions 18-24 all Tue 14:40). `mergeEvents()` (`src/lib/calMerge.ts`) makes
-  one class per course+section+start time ("Sessions 18–24"); different courses at the same time stay separate. Both
-  `myClasses()` and `shareFromCalendar()` use it. Important: `sync_section_sessions()` fails the WHOLE sync ("ON CONFLICT
+  one class per course+section+start time; different courses at the same time stay separate. One slot = one class = one
+  attendance mark (owner's rule). `numberSessions()` then numbers each course's classes in time order from its first
+  class (that class's own number, +1 per later class), so a stacked slot shows "Session 18 (listed as 18–24)" and the
+  next class "Session 19"; the section share stores these counted numbers. `myClasses()` merges and numbers the whole
+  calendar once per sync (`mergedCalendar()` cache) and `shareFromCalendar()` does the same. Classes show the room as a
+  badge; the Next class tile shows "Course · Room". Important: `sync_section_sessions()` fails the WHOLE sync ("ON CONFLICT
   DO UPDATE command cannot affect row a second time") if two rows share (day, starts, code), so never send unmerged rows.
 - Section timetables (0004 `section_sessions`): after a calendar sync, `useShareSessions` sends the student's
   own-section "Session No" sessions (today-7..+60 days) to `sync_section_sessions()`, which takes year/section from

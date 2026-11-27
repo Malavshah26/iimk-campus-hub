@@ -19,19 +19,58 @@ export interface MergedEvent {
   /** How many calendar events were merged into this one (1 = no duplicates). */
   copies: number
   isSession: boolean
+  /** The class's real session number, counted from the course's first class (see numberSessions). */
+  number?: number
 }
 
 /** "FM-I Financial Management I (Sec A) - rescheduled" -> "FM-I Financial Management I": one attendance group per course. */
 export const courseKey = (title: string) =>
   title.replace(/\s*[-–|:]\s*(rescheduled|extra|make[- ]?up|shifted|moved|cancelled|tentative)\b.*$/i, '').replace(/\s*\((sec(tion)?|grp|group)[^)]*\)\s*/gi, ' ').trim().slice(0, 40) || title.slice(0, 40)
 
+/** [15] -> "15"; [18..24] -> "18–24"; [19, 22] -> "19, 22". */
+export function sessionRange(ns: number[]): string {
+  const s = [...new Set(ns)].sort((a, b) => a - b)
+  if (s.length <= 1) return s.length ? String(s[0]) : ''
+  const run = s.every((n, i) => i === 0 || n === s[i - 1] + 1)
+  return run ? `${s[0]}–${s[s.length - 1]}` : s.join(', ')
+}
+
 /** [15] -> "Session 15"; [18..24] -> "Sessions 18–24"; [19, 22] -> "Sessions 19, 22". */
 export function sessionsLabel(ns: number[]): string {
-  const s = [...new Set(ns)].sort((a, b) => a - b)
-  if (!s.length) return ''
-  if (s.length === 1) return `Session ${s[0]}`
-  const run = s.every((n, i) => i === 0 || n === s[i - 1] + 1)
-  return run ? `Sessions ${s[0]}–${s[s.length - 1]}` : `Sessions ${s.join(', ')}`
+  const n = new Set(ns).size
+  return n ? `Session${n > 1 ? 's' : ''} ${sessionRange(ns)}` : ''
+}
+
+/**
+ * What to show for a class: its counted number ("Session 18"), plus what the calendar said when
+ * several sessions were stacked into this one slot ("Session 18 (listed as 18–24)").
+ */
+export function sessionText(m: Pick<MergedEvent, 'number' | 'sessions'>): string {
+  if (m.number === undefined) return sessionsLabel(m.sessions)
+  const listed = new Set(m.sessions).size > 1 ? ` (listed as ${sessionRange(m.sessions)})` : ''
+  return `Session ${m.number}${listed}`
+}
+
+/**
+ * Numbers each course's classes in time order, counting from its first class: that class's own session
+ * number (1 if it has none), then one more for every class after it. A slot is one class however many
+ * entries the calendar has for it, so stacked sessions ("18–24" all at 2:40) count once and the classes
+ * after them carry on from there. Sets `number` on session events and returns the same list.
+ */
+export function numberSessions(merged: MergedEvent[]): MergedEvent[] {
+  const byCourse = new Map<string, MergedEvent[]>()
+  for (const m of merged) {
+    if (!m.isSession) continue
+    const k = `${m.code.toLowerCase()}|${m.section.toLowerCase()}`
+    if (!byCourse.has(k)) byCourse.set(k, [])
+    byCourse.get(k)!.push(m)
+  }
+  for (const list of byCourse.values()) {
+    list.sort((a, b) => a.start - b.start)
+    const first = list[0].sessions.length ? Math.min(...list[0].sessions) : 1
+    list.forEach((m, i) => { m.number = first + i })
+  }
+  return merged
 }
 
 const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))]

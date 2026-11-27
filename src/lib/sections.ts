@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CalState } from './gcal'
 import { classesFor, type ClassItem, type RefData } from './ref'
-import { mergeEvents } from './calMerge'
+import { mergeEvents, numberSessions } from './calMerge'
 import { supabase } from './supabase'
 import { dstr, hhmm, local, overlaps, saveLocal } from './util'
 
@@ -107,10 +107,10 @@ export async function shareFromCalendar(cal: CalState, year: string, section: st
   const [from, to] = shareWindow()
   // One row per course and start time: the database refuses a sync that names the same class twice
   // (calendars do contain doubled invites and sessions stacked in one slot).
-  const rows = mergeEvents(cal.events).flatMap(e => {
+  const rows = numberSessions(mergeEvents(cal.events)).flatMap(e => {
     const day = dstr(new Date(e.start))
     if (!e.isSession || e.section.toUpperCase() !== section.toUpperCase() || day < from || day > to) return []
-    return [{ day, starts: hhmm(e.start), ends: hhmm(e.end), code: e.code, session: e.sessions.length ? String(Math.min(...e.sessions)) : '', faculty: e.faculty.slice(0, 20), room: e.room.slice(0, 20) }]
+    return [{ day, starts: hhmm(e.start), ends: hhmm(e.end), code: e.code, session: e.number !== undefined ? String(e.number) : e.sessions.length ? String(Math.min(...e.sessions)) : '', faculty: e.faculty.slice(0, 20), room: e.room.slice(0, 20) }]
   })
   if (rows.length < 3) return 0
   const { data, error } = await supabase.rpc('sync_section_sessions', { p_from: from, p_to: to, p_rows: rows })

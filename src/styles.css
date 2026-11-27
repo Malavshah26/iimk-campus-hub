@@ -452,3 +452,5 @@ table.adm.ovtable th,table.adm.ovtable td{padding:7px 10px;border-bottom:1px sol
 .viewbar b{font-weight:600}
 .viewbar.other{background:var(--pale);border-color:var(--hi)}
 .viewbar .btn{min-height:36px;padding:4px 12px;font-size:14px}
+/* Classroom badge on each class */
+.cls h3 .room{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 9px 2px 7px;border-radius:99px;background:var(--leafbg);color:var(--hi);border:1px solid color-mix(in srgb,var(--hi) 30%,transparent);font:600 13.5px/1.4 Inter,sans-serif;letter-spacing:.01em;vertical-align:2px;white-space:nowrap}

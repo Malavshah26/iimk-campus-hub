@@ -104,7 +104,7 @@ function NowBoard() {
   const tiles: [string, string, string, string][] = [
     noSchedule
       ? ['#classes', 'Classes', 'Sync calendar', 'tap to add your Google Calendar']
-      : ['#classes', c && mins(c.starts) <= nm ? 'Class on now' : 'Next class', c ? (mins(c.starts) <= nm ? 'till ' + c.ends : c.starts) : 'All done', c ? c.name : 'no more classes today'],
+      : ['#classes', c && mins(c.starts) <= nm ? 'Class on now' : 'Next class', c ? (mins(c.starts) <= nm ? 'till ' + c.ends : c.starts) : 'All done', c ? [c.name, c.room?.replace(/^room\s+/i, '')].filter(Boolean).join(' · ') : 'no more classes today'],
     ref.shuttle.length
       ? ['#bus', 'Shuttle from ' + stop, shuttle ? showTime(shuttle.at) : 'No more', shuttle ? `in ${inFmt(mins(shuttle.at) - nm)} → ${shuttle.rest[0].stop}` : 'check tomorrow’s times']
       : ['#bus', 'Next bus to city', bus || 'No more', bus ? 'in ' + inFmt(mins(bus) - nm) : 'check tomorrow’s times'],

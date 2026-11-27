@@ -14,6 +14,10 @@ import { Chips, Empty } from '../components/Bits'
 
 type Mode = 'mine' | 'cmp'
 
+/** "Room B2" -> "B2" (the badge already says it's a room). */
+const roomName = (r: string) => r.replace(/^room\s+/i, '')
+const PinIcon = () => <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M12 21s-6-5.3-6-10.5a6 6 0 0 1 12 0C18 15.7 12 21 12 21z" /><circle cx="12" cy="10.5" r="2.2" /></svg>
+
 /** How many more classes you can miss (or must attend in a row) to stay at 75%. */
 export function skipLine({ y, t }: { y: number; t: number }): string {
   if (!t) return ''
@@ -182,7 +186,8 @@ function MyTimetable() {
           return (
             <div key={key} className={'cls' + (live ? ' now' : '')}>
               <div><b className="t">{c.starts}</b><small>till {c.ends}</small></div>
-              <div><h3>{c.name}</h3><div className="meta">{[c.name !== c.code && c.code, c.detail, c.room].filter(Boolean).join(' · ')}{live && <> · <b>On now</b></>}</div></div>
+              <div><h3>{c.name}{c.room && <span className="room" title="Classroom"><PinIcon />{roomName(c.room)}</span>}</h3>
+                <div className="meta">{[c.name !== c.code && c.code, c.detail].filter(Boolean).join(' · ')}{live && <> · <b>On now</b></>}</div></div>
               <div className="att">
                 {!own ? null : future ? <button disabled>Upcoming</button> : <>
                   <button className={v === 'y' ? 'y' : ''} aria-pressed={v === 'y'} onClick={() => mark(key, c.code, 'y')}>Attended</button>

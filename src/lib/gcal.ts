@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { parseIcs, type CalEvent } from './ical'
 import { looksLikeSession, parseSessionTitle } from './sessionTitle'
-import { mergeEvents, sessionsLabel } from './calMerge'
+import { mergeEvents, numberSessions, sessionText, type MergedEvent } from './calMerge'
 import type { ClassItem, RefData } from './ref'
 import { sectionClasses } from './sections'
 import { supabase } from './supabase'
@@ -96,12 +96,28 @@ export function useCalAutoSync() {
   }, [])
 }
 
+const filterWords = (cal: CalState) => cal.filter.split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
+const passes = (words: string[], e: CalEvent) => !words.length || words.some(w => `${e.title} ${e.location}`.toLowerCase().includes(w))
+
 export function calEventsOn(cal: CalState, date: Date): CalEvent[] {
   const d0 = new Date(date)
   d0.setHours(0, 0, 0, 0)
   const a = d0.getTime(), b = a + DAY
-  const words = cal.filter.split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
-  return cal.events.filter(e => e.start < b && e.end > a && (!words.length || words.some(w => `${e.title} ${e.location}`.toLowerCase().includes(w))))
+  const words = filterWords(cal)
+  return cal.events.filter(e => e.start < b && e.end > a && passes(words, e))
+}
+
+/**
+ * The whole calendar with duplicates merged (an invite sent twice, sessions stacked in one slot) and each
+ * course's classes numbered from its first one. Worked out once per sync, since numbering needs every class.
+ */
+let merged: { events: CalEvent[]; filter: string; list: MergedEvent[] } | null = null
+function mergedCalendar(cal: CalState): MergedEvent[] {
+  if (merged && merged.events === cal.events && merged.filter === cal.filter) return merged.list
+  const words = filterWords(cal)
+  const list = numberSessions(mergeEvents(cal.events.filter(e => passes(words, e))))
+  merged = { events: cal.events, filter: cal.filter, list }
+  return list
 }
 
 /**
@@ -113,13 +129,16 @@ export function myClasses(ref: RefData, date: Date, year: string, section: strin
   // The calendar is the source of truth: its titles group attendance by course.
   const names = new Map<string, string>()
   for (const r of ref.timetable) if (!names.has(r.course_code.toLowerCase()) || (r.year === year && r.section === section)) names.set(r.course_code.toLowerCase(), r.course_name)
-  // Duplicates in the calendar (an invite sent twice, sessions stacked in one slot) become one class.
-  return mergeEvents(calEventsOn(state, date)).map(e => {
+  const d0 = new Date(date)
+  d0.setHours(0, 0, 0, 0)
+  const a = d0.getTime(), b = a + DAY
+  // One class per slot (duplicates merged), numbered by counting the course's classes from its first.
+  return mergedCalendar(state).filter(e => e.start < b && e.end > a).map(e => {
     const starts = hhmm(e.start), ends = hhmm(e.end)
     const slot = ref.slots.find(s => overlaps(starts, ends, s.starts, s.ends))?.slot || 0
     if (e.isSession) return { // "Session No: 15 - EE(C)-LME-(CR B1)"
       slot, starts, ends, code: e.code, name: names.get(e.code.toLowerCase()) || e.code,
-      room: e.room ? 'Room ' + e.room : e.location || null, detail: [sessionsLabel(e.sessions), e.faculty].filter(Boolean).join(' · '),
+      room: e.room ? 'Room ' + e.room : e.location || null, detail: [sessionText(e), e.faculty].filter(Boolean).join(' · '),
     }
     return { slot, starts, ends, code: e.code, name: e.title, room: e.location || null }
   })
