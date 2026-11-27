@@ -22,7 +22,7 @@ Six main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls
 | **Contacts** | Emergency helplines and IIMK offices, tap to call or email |
 | **Admin** | Timetable (incl. paste from Excel), mess menu (Excel upload) and feedback, transport (shuttle sheet and auto list paste), contacts, hostels, facilities, class timings, admins, usage & clean-up |
 
-Also: a 4-step intro for new students (profile, calendar sync, notifications), opt-in birthdays shown to your own section on the home screen, works offline for timetable/menu/bus/contacts, installable on phones, in-app notifications (wash done, ride joined, complaint updated, new notice or poll, event and booking reminders, evening attendance reminder), and a daily keep-alive so the free database doesn’t pause.
+Also: **search everything** (header button, `/` or Ctrl+K: pages, notices, polls, events, lost & found, buy & sell, contacts and the mess menu; a result opens that exact item), **Light / Dark / Auto** theme in Profile, an **Install app** button (one tap on Android/desktop Chrome, step-by-step on iPhone) with proper app icons, a 4-step intro for new students (profile, calendar sync, notifications), opt-in birthdays shown to your own section on the home screen, works offline for timetable/menu/bus/contacts, installable on phones, in-app notifications (wash done, ride joined, complaint updated, new notice or poll, event and booking reminders, evening attendance reminder), and a daily keep-alive so the free database doesn’t pause.
 
 Only signed-in `@iimk.ac.in` accounts can see or post anything. This is enforced in the database (row-level security), not just in the app.
 

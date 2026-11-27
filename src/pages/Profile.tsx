@@ -7,6 +7,9 @@ import type { Year } from '../lib/types'
 import { askNotify, canNotify, notify, notifyAllowed, notifyBlocked } from '../lib/notify'
 import { reminderTime, setReminderTime } from '../lib/attendance'
 import { BirthdayField } from '../components/Birthday'
+import { InstallButton } from '../components/Install'
+import { Seg } from '../components/Bits'
+import { getTheme, setTheme, type Theme } from '../lib/theme'
 
 export function ProfileForm({ first = false }: { first?: boolean }) {
   const { session, profile, reloadProfile, signOut, isAdmin } = useAuth()
@@ -59,6 +62,7 @@ export function ProfileForm({ first = false }: { first?: boolean }) {
         {msg && <p className="note err">{msg}</p>}
         {!first && session && <BirthdayField uid={session.user.id} />}
         {!first && <Notifications />}
+        {!first && <Appearance />}
         {!first && (
           <div className="acts" style={{ marginTop: 18 }}>
             <button className="btn" type="button" onClick={() => { window.location.hash = '#classes'; window.dispatchEvent(new Event('hub:tour')) }}>Show the intro again</button>
@@ -68,6 +72,19 @@ export function ProfileForm({ first = false }: { first?: boolean }) {
         )}
         {first && <button className="btn wide" type="button" onClick={signOut}>Sign out</button>}
       </form>
+    </div>
+  )
+}
+
+function Appearance() {
+  const [theme, set] = useState<Theme>(getTheme())
+  return (
+    <div className="notif">
+      <span className="lab">Appearance</span>
+      <Seg value={theme} onChange={t => { set(t); setTheme(t) }} options={[['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']]} />
+      <p className="note">Auto follows your phone’s light or dark setting.</p>
+      <span className="lab" style={{ marginTop: 16 }}>Install the app</span>
+      <InstallButton />
     </div>
   )
 }

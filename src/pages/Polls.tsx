@@ -9,6 +9,7 @@ import { dstr, sectionLabel } from '../lib/util'
 import { audience, canVote, isOpen, myBallot, pollsChanged, rememberBallot, whenLabel } from '../lib/polls'
 import { Text } from '../components/Text'
 import { Empty, ErrorNote, Loading, Seg } from '../components/Bits'
+import { useFocusItem } from '../lib/focus'
 
 type MyVote = { poll_id: string; option_id: number | null }
 
@@ -39,6 +40,7 @@ export function Polls() {
   const open = polls.data.filter(isOpen).sort((a, b) => a.closes_at.localeCompare(b.closes_at))
   const closed = polls.data.filter(p => !isOpen(p)).sort((a, b) => b.closes_at.localeCompare(a.closes_at))
   const reload = () => { polls.reload(); votes.reload(); loadTally(); pollsChanged() }
+  useFocusItem(!polls.loading, id => { if (closed.some(p => p.id === id)) setOld(true) })
   const card = (p: Poll) => <PollCard key={p.id} p={p} mine={mine.get(p.id)} t={tally[p.id]} admin={isAdmin} onChange={reload} />
 
   const list = (
@@ -127,7 +129,7 @@ function PollCard({ p, mine, t, admin, onChange }: { p: Poll; mine?: MyVote; t?:
   </div>
 
   return (
-    <div className={'card poll' + (live ? '' : ' closed')}>
+    <div id={'it-' + p.id} className={'card poll' + (live ? '' : ' closed')}>
       <div className="ch"><h3>{p.title}</h3>
         <span className={'tag ' + (live ? 't-ok' : '')}>{live ? (p.secret ? 'Election · open' : 'Open') : 'Closed'}</span></div>
       <div className="meta">{audience(p)} · {live ? 'closes ' : 'closed '}{whenLabel(p.closes_at)} · {t ? `${t.voters} voted` : '…'}{p.secret ? ' · secret ballot' : ''}</div>

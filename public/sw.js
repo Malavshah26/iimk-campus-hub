@@ -2,10 +2,11 @@
 // cached by the app itself) and shows notifications on Android.
 // Pages are network-first so a new deploy shows up on the next load; built files under /assets/
 // have unique names, so they're cached forever.
-const CACHE = 'hub-v1'
+const CACHE = 'hub-v2'
+const SHELL = ['/', '/icon.svg', '/icon-192.png', '/manifest.webmanifest']
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/', '/icon.svg', '/manifest.webmanifest'])).then(() => self.skipWaiting()))
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()))
 })
 
 self.addEventListener('activate', e => {
@@ -39,7 +40,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => put(req, res))))
     return
   }
-  if (url.origin === location.origin && (url.pathname === '/icon.svg' || url.pathname === '/manifest.webmanifest')) {
+  if (url.origin === location.origin && (SHELL.includes(url.pathname) || /^\/(icon|apple-touch-icon|favicon)[\w-]*\.png$/.test(url.pathname))) {
     e.respondWith(fetch(req).then(res => put(req, res)).catch(() => caches.match(req)))
   }
   // Everything else (Supabase data, sign-in) always goes to the network.

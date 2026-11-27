@@ -1,18 +1,23 @@
 {
   "name": "IIMK Campus Hub",
   "short_name": "Campus Hub",
-  "description": "Timetable, attendance, events, mess, bus, laundry, carpool and more for IIM Kozhikode students.",
+  "description": "Timetable, attendance, events, mess, transport, laundry, lost & found and more for IIM Kozhikode students.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1f4583",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
   "shortcuts": [
-    { "name": "Classes", "url": "/#classes" },
-    { "name": "Mess menu", "url": "/#mess" },
-    { "name": "Laundry", "url": "/#laundry" },
-    { "name": "Events", "url": "/#events" }
+    { "name": "Classes", "url": "/#classes", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mess menu", "url": "/#mess", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Shuttle", "url": "/#bus", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Lost & found", "url": "/#lost", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]
 }

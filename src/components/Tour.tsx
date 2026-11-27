@@ -5,6 +5,7 @@ import { askNotify, canNotify, notifyAllowed, notifyBlocked } from '../lib/notif
 import { sectionLabel } from '../lib/util'
 import { CalendarSync } from './CalendarSync'
 import { BirthdayField } from './Birthday'
+import { InstallButton } from './Install'
 
 // Mirrors the main headers in App.tsx.
 const FEATURES: [string, string][] = [
@@ -58,7 +59,9 @@ export function Tour({ onDone }: { onDone: () => void }) {
         : notifyAllowed() ? <p className="tag t-ok big">✓ Notifications are on</p>
         : notifyBlocked() ? <p className="note">Notifications are blocked for this site. Allow them in the browser’s site settings (the icon left of the address bar).</p>
         : <button className="btn pri inline" type="button" onClick={async () => { await askNotify(); bump(n => n + 1) }}>Turn on notifications</button>}
-      <p className="note"><b>Install it like an app:</b> in Chrome, menu ⋮ → <i>Add to Home screen</i>; on iPhone Safari, Share → <i>Add to Home Screen</i>. It then opens full screen and works offline for the timetable, menu, bus and contacts.</p>
+      <span className="lab">Install it like an app</span>
+      <p className="note" style={{ marginTop: 0, marginBottom: 8 }}>It then opens in one tap, full screen, and works offline for the timetable, menu, bus and contacts.</p>
+      <InstallButton />
     </>,
   ]
 

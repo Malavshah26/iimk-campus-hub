@@ -83,6 +83,17 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   by trigger for notifications) and `lost_flags` (reports; only reporter + admins read) cascade with the post. Matching is
   client-side `matchScore()`: same category +3, same area +1, shared words up to +4, found-before-lost-2-days = 0, show at
   >= 5. Notifier alerts on replies to my posts and on new posts matching my open ones. Views: Board / My posts / Desk (admins).
+- Deep links: `#tab/<id>` (e.g. `#lost/<uuid>`, `#events/<uuid>`, `#mess/Wed`); `useRoute` uses the part before `/`.
+  `useFocusItem()` (`src/lib/focus.ts`) scrolls to and flashes the element `id="it-<id>"` (Notices, Polls, Events, Market,
+  Contacts, Autos); Lost & found opens the post; Mess opens that day. Search (`src/components/Search.tsx`, lazy; header
+  button, `/`, Ctrl+K) loads notices, events (last 60 days on), lost & found, listings and polls once when opened and
+  filters in the browser, plus pages, contacts and the menu from reference data.
+- Theme: `hub.theme` = auto|light|dark (`src/lib/theme.ts`), applied before paint by an inline script in index.html and
+  by `applyTheme()`; the stylesheet's light-dark() colours follow `data-theme`. Install: `src/lib/install.ts` keeps
+  `beforeinstallprompt` (imported in main.tsx); `InstallButton` (Profile, intro) and `InstallBanner` (Classes, dismiss
+  for 30 days); iPhone gets Share -> Add to Home Screen steps. PNG icons in public/ are drawn from icon.svg's shapes.
+  `Modal` (`src/components/Modal.tsx`) renders into <body> via a portal. Don't reuse the class names `top` or `big`
+  for new things: `.top p` (header) and `.big` already have meanings in styles.css.
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
   open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables
@@ -118,7 +129,6 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
 ## Ideas not built yet
 - Real push notifications (needs a server, e.g. Supabase Edge Function + Web Push keys)
 - Anonymous complaints (needs a view or RPC that hides user_id; RLS alone can't hide a column)
-- PNG app icons for older Android installs (only SVG now)
 
 ## Conventions
 - Keep components small and in `src/pages/<Tab>.tsx`; shared bits in `src/components/`.

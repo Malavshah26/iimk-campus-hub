@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useFocusItem } from '../lib/focus'
 import { useMe } from '../lib/auth'
 import { CATEGORY_ICON } from '../lib/icons'
 import { deletePhoto, uploadPhoto, useSignedUrls } from '../lib/photos'
@@ -70,6 +71,7 @@ export function Market() {
     reload()
   }
 
+  useFocusItem(!loading, () => { setFilter('all'); setCatF(''); setQ('') })
   const term = norm(q)
   const list = data
     .filter(m => (filter === 'all' || m.kind === filter) && (!catF || m.category === catF) && (!term || norm(`${m.title} ${m.description} ${m.category}`).includes(term)))
@@ -116,7 +118,7 @@ export function Market() {
             const done = m.status === 'done'
             const wa = waLink(m.poster?.phone)
             return (
-              <div className={'card lcard' + (done ? ' closed' : '')} key={m.id}>
+              <div id={'it-' + m.id} className={'card lcard' + (done ? ' closed' : '')} key={m.id}>
                 <button type="button" className="th" aria-label={'View photo of ' + m.title} onClick={() => setZoom(m)}><Pic url={url(m.photo_path)} art={CATEGORY_ICON[m.category] || 'box'} alt={m.title} /></button>
                 <div>
                   <div className="ch"><h3>{m.title}</h3>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useFocusItem } from '../lib/focus'
 import { useMe } from '../lib/auth'
 import { useRef_, type RefData } from '../lib/ref'
 import { myClasses, useCal } from '../lib/gcal'
@@ -74,6 +75,7 @@ export function Events() {
   }
 
   const t = today()
+  useFocusItem(!loading, id => { const e = data.find(x => x.id === id); if (e) { setQ(''); setFilter(e.event_date < t ? 'past' : 'up') } })
   const term = norm(q)
   const list = data
     .filter(e => filter === 'past' ? e.event_date < t : e.event_date >= t)
@@ -128,7 +130,7 @@ export function Events() {
                   const wa = waLink(e.poster?.phone)
                   const cal = { title: e.title, date: e.event_date, starts: e.starts, ends: e.ends, place: e.venue, details: [e.organiser, e.description, e.link].filter(Boolean).join('\n') }
                   return (
-                    <div className={'card' + (e.event_date < t ? ' closed' : '')} key={e.id}>
+                    <div id={'it-' + e.id} className={'card' + (e.event_date < t ? ' closed' : '')} key={e.id}>
                       <div className="ch"><h3>{e.title}</h3><b className="when">{e.starts}–{e.ends}</b></div>
                       <div className="meta">{[e.venue, e.organiser || e.poster?.name].filter(Boolean).join(' · ')}{e.event_rsvps.length ? ` · ${e.event_rsvps.length} going` : ''}</div>
                       {mine.length > 0 && <div className="flag">Clashes with your class: {mine.map(c => `${c.name} (${c.starts}–${c.ends})`).join(', ')}</div>}

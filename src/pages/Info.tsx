@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { hashId, useFocusItem } from '../lib/focus'
 import { useRef_ } from '../lib/ref'
 import { useTick } from '../lib/useLive'
 import { DAYS, inFmt, isWeekend, local, mins, norm, nowMin, saveLocal } from '../lib/util'
@@ -20,6 +21,7 @@ export function Autos() {
   const { ref } = useRef_()
   const list = ref.contacts.filter(c => c.grp === AUTO_GROUP)
   const [copied, setCopied] = useState('')
+  useFocusItem(true)
   return (
     <section>
       <div className="hd"><div><h2>Autos & taxis</h2><p className="sub">Drivers who take students to and from campus. Call or WhatsApp them; agree the fare before you set off.</p></div></div>
@@ -33,7 +35,7 @@ export function Autos() {
 
 function PhoneCard({ c, copied, onCopy, wa }: { c: Contact; copied: string; onCopy: (n: string) => void; wa?: boolean }) {
   const w = wa ? waMobile(c.number) : ''
-  return <div className={'crd' + (c.emergency ? ' em' : '') + (w ? ' stack' : '')}>
+  return <div id={'it-' + c.id} className={'crd' + (c.emergency ? ' em' : '') + (w ? ' stack' : '')}>
     <div><h4>{c.name}</h4><span className="num">{c.number}</span>{c.note && <span className="meta">{c.note}</span>}
       {emails(c.email).map(e => <a key={e} className="mail" href={'mailto:' + e}>{e}</a>)}</div>
     <div className="acts">
@@ -124,10 +126,11 @@ export function Mess() {
   useTick()
   const { ref } = useRef_()
   const todayName = DAYS[new Date().getDay()]
-  const [day, setDay] = useState<string>(todayName)
+  const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const [day, setDay] = useState<string>(() => (order.includes(hashId()) ? hashId() : todayName))
+  useFocusItem(true, d => { if (order.includes(d)) setDay(d) })
   const nm = nowMin()
   const cur = ref.meals.find(m => nm >= mins(m.starts) && nm < mins(m.ends)) || ref.meals.find(m => mins(m.starts) > nm)
-  const order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const fb = useMealFeedback()
   return (
     <section>
@@ -152,6 +155,7 @@ export function Contacts() {
   const { ref } = useRef_()
   const [q, setQ] = useState('')
   const [copied, setCopied] = useState('')
+  useFocusItem(true, () => setQ(''))
   const term = norm(q)
   // Auto drivers have their own page (Transport); they still turn up when searching.
   const groups = Array.from(new Set(ref.contacts.map(c => c.grp))).filter(g => term || g !== AUTO_GROUP)

@@ -7,6 +7,7 @@ import { dayLabel, dstr, today } from '../lib/util'
 import { isLive, markSeen, useNotices } from '../lib/notices'
 import { Text } from '../components/Text'
 import { Empty, ErrorNote, Loading } from '../components/Bits'
+import { useFocusItem } from '../lib/focus'
 
 const posted = (iso: string) => dayLabel(dstr(new Date(iso)))
 
@@ -18,7 +19,7 @@ export function NoticeCard({ n, admin, onChange }: { n: Notice; admin?: boolean;
     onChange?.()
   }
   return (
-    <div className={'card notice' + (n.pinned ? ' pin' : '') + (isLive(n) ? '' : ' closed')}>
+    <div id={'it-' + n.id} className={'card notice' + (n.pinned ? ' pin' : '') + (isLive(n) ? '' : ' closed')}>
       <div className="ch"><h3>{n.title}</h3>{n.pinned && <span className="tag t-ok">Pinned</span>}</div>
       <div className="meta">Council · {posted(n.created_at)}{n.expires_on ? ` · until ${dayLabel(n.expires_on)}` : ''}</div>
       {n.body && <Text text={n.body} />}
@@ -63,6 +64,7 @@ export function Notices() {
 
   const live = data.filter(isLive)
   const expired = data.filter(n => !isLive(n))
+  useFocusItem(!loading, id => { if (expired.some(n => n.id === id)) setOld(true) })
 
   const list = (
     <div>

@@ -18,6 +18,7 @@ import { Notifier } from './components/Notifier'
 import { AttendanceNudge } from './components/AttendanceNudge'
 import { BirthdayCard } from './components/Birthday'
 import { useUnvotedPolls } from './lib/polls'
+import { InstallBanner } from './components/Install'
 
 // Each tab is downloaded only when first opened, so the app starts faster on slow campus Wi-Fi.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +40,7 @@ const Complaints = page(() => import('./pages/Complaints'), 'Complaints')
 const Book = page(() => import('./pages/Book'), 'Book')
 const Polls = page(() => import('./pages/Polls'), 'Polls')
 const Tour = page(() => import('./components/Tour'), 'Tour')
+const Search = page(() => import('./components/Search'), 'Search')
 
 // Main headers, each with its tabs. Each tab keeps its own #address, so old links and the home tiles still work.
 const GROUPS = [
@@ -57,7 +59,7 @@ const tourKey = (uid: string) => 'hub.tour.' + uid
 
 function useRoute(): Route {
   const get = () => {
-    const h = window.location.hash.slice(1)
+    const h = window.location.hash.slice(1).split('/')[0]
     return (ROUTES.has(h) ? h : 'classes') as Route
   }
   const [r, setR] = useState<Route>(get)
@@ -170,6 +172,16 @@ function Shell() {
   const unvoted = useUnvotedPolls(uid, profile)
   // First-run intro; Profile -> "Show the intro again" brings it back.
   const [tour, setTour] = useState(() => !local(tourKey(uid), false))
+  const [searching, setSearching] = useState(false)
+  // "/" or Ctrl+K opens search (when not typing somewhere).
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      const typing = /^(input|textarea|select)$/i.test((e.target as HTMLElement)?.tagName || '') || (e.target as HTMLElement)?.isContentEditable
+      if ((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) { e.preventDefault(); setSearching(true) }
+    }
+    window.addEventListener('keydown', on)
+    return () => window.removeEventListener('keydown', on)
+  }, [])
   useEffect(() => {
     const on = () => setTour(true)
     window.addEventListener('hub:tour', on)
@@ -190,6 +202,9 @@ function Shell() {
           <div className="top">
             <div><h1>IIMK Campus Hub</h1><p>Hi {profile.name.split(' ')[0]} · {profile.year === '1' ? 'Year 1' : 'Year 2'} · {profile.section.length > 1 ? profile.section : 'Section ' + profile.section}</p></div>
             <div className="acts" style={{ margin: 0 }}>
+              <button className="hbtn" type="button" onClick={() => setSearching(true)} aria-label="Search" title="Search (/)">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                <span className="hide-sm">Search</span></button>
               {isAdmin && <a className="hbtn" href="#admin">Admin</a>}
               <a className="hbtn" href="#profile">Profile</a>
             </div>
@@ -204,6 +219,7 @@ function Shell() {
           ? <div className="status show">Couldn’t refresh campus data, showing the copy saved on this device.</div>
           : <div className="status show">Couldn’t load campus data: {error}</div>)}
         <PinnedBanner notices={notices.data} route={route} />
+        {route === 'classes' && !tour && <InstallBanner />}
         {!loading && <AttendanceNudge route={route} />}
         {loading ? <Loading /> : <Suspense fallback={<Loading />}>
           {route === 'classes' && <Classes />}
@@ -226,6 +242,7 @@ function Shell() {
       </main>
       <Notifier />
       {tour && !loading && <Suspense fallback={null}><Tour onDone={endTour} /></Suspense>}
+      {searching && <Suspense fallback={null}><Search onClose={() => setSearching(false)} /></Suspense>}
     </>
   )
 }

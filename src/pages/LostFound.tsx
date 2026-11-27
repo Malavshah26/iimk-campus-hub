@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMe } from '../lib/auth'
 import { deletePhoto, uploadPhoto, useSignedUrls } from '../lib/photos'
 import { explain, supabase } from '../lib/supabase'
@@ -11,6 +11,8 @@ import { Chips, Empty, ErrorNote, Loading, Seg } from '../components/Bits'
 import { PhotoPicker } from '../components/PhotoPicker'
 import { Pic } from '../components/Pic'
 import { Text } from '../components/Text'
+import { Modal } from '../components/Modal'
+import { hashId } from '../lib/focus'
 
 type View = 'board' | 'mine' | 'desk'
 type Res = PromiseLike<{ error: { message: string } | null }>
@@ -39,6 +41,12 @@ export function LostFound() {
   const reported = new Set(flags.data.filter(f => all.some(i => i.id === f.item_id)).map(f => f.item_id)).size
   const needsUpdate = all.length > 0 && all.every(i => i.ref === undefined)
   const open = openId ? all.find(i => i.id === openId) : undefined
+  useEffect(() => {
+    const go = () => { const id = hashId(); if (id && items.data.some(i => i.id === id)) { setView('board'); setOpenId(id) } }
+    go()
+    window.addEventListener('hashchange', go)
+    return () => window.removeEventListener('hashchange', go)
+  }, [items.data.length > 0]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = async (p: Res, ok: string) => {
     const { error } = await p
@@ -78,7 +86,8 @@ export function LostFound() {
       {view === 'board' && <Board items={board} loading={items.loading} url={url} onOpen={setOpenId} onPost={k => setForm({ kind: k })} />}
       {view === 'mine' && <Mine items={mine} board={board} url={url} onOpen={setOpenId} onPost={k => setForm({ kind: k })} act={actions} />}
       {view === 'desk' && isAdmin && <Desk items={all} flags={flags.data} url={url} onOpen={setOpenId} act={actions} />}
-      {open && <ItemView it={open} board={board} url={url} onOpen={setOpenId} onClose={() => setOpenId(null)} act={actions}
+      {open && <ItemView it={open} board={board} url={url} onOpen={setOpenId} act={actions}
+        onClose={() => { setOpenId(null); if (hashId()) history.replaceState(null, '', '#lost') }}
         onEdit={() => { setOpenId(null); setForm({ kind: open.kind, edit: open }) }} />}
       {form && <PostForm kind={form.kind} edit={form.edit} url={url} onClose={() => setForm(null)}
         onSaved={id => { setForm(null); items.reload(); setOpenId(id) }} />}
@@ -220,25 +229,6 @@ function Desk({ items, flags, url, onOpen, act }: { items: LostItem[]; flags: Lo
 }
 
 /* ------------------------------------------------------------------ one post */
-
-function Modal({ label, head, children, onClose, foot }: { label: string; head: React.ReactNode; children: React.ReactNode; onClose: () => void; foot?: React.ReactNode }) {
-  const box = useRef<HTMLDivElement>(null)
-  const close = useRef(onClose)
-  close.current = onClose
-  useEffect(() => {
-    if (!box.current?.contains(document.activeElement)) box.current?.focus()
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') close.current() }
-    window.addEventListener('keydown', esc)
-    return () => window.removeEventListener('keydown', esc)
-  }, [])
-  return <div className="modal" role="dialog" aria-modal="true" aria-label={label} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-    <div className="mcard" ref={box} tabIndex={-1}>
-      <div className="mhead">{head}<button type="button" className="mx" aria-label="Close" onClick={onClose}>×</button></div>
-      {children}
-      {foot && <div className="mfoot">{foot}</div>}
-    </div>
-  </div>
-}
 
 function Copy({ text }: { text: string }) {
   const [done, setDone] = useState(false)
