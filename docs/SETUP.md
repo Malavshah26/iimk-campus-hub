@@ -8,7 +8,8 @@ About 30 minutes. You need: a GitHub account (this repository), a free [Supabase
 > `0003_campus_shuttle.sql` (campus shuttle timetable), `0004_section_sessions.sql` (section timetables filled from
 > students' synced calendars), `0005_contact_emails.sql` (emails on contacts, real IIMK office numbers), `0006_polls_birthdays.sql`
 > (polls and elections, opt-in birthdays), `0007_lost_found.sql` (categories, places, matches, responses and reports in
-> Lost & found). Until then the new parts say they need the database update;
+> Lost & found), `0008_launch_overview.sql` (Admin -> Overview: launch checklist and sign-up numbers). Until then the
+> new parts say they need the database update;
 > everything else keeps working.
 
 ---
@@ -32,11 +33,12 @@ In the Supabase dashboard open **SQL Editor → New query**, then run these file
 5. `supabase/migrations/0005_contact_emails.sql`: emails on contacts, plus the real IIMK office numbers
 6. `supabase/migrations/0006_polls_birthdays.sql`: polls and secret-ballot elections, opt-in section birthdays
 7. `supabase/migrations/0007_lost_found.sql`: Lost & found with categories, places, reference codes, matches, responses and reports
-8. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
-9. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
-10. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
+8. `supabase/migrations/0008_launch_overview.sql`: Admin -> Overview (launch checklist, sign-ups, activity)
+9. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
+10. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
+11. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
 
-Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002–0007 and the seeds.
+Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002–0008 and the seeds.
 
 ## 3. Check the email domain
 
@@ -109,7 +111,8 @@ Reload the site: an **Admin** button appears in the header. From now on, add or 
 
 ## 7. Replace the sample data
 
-On the **Admin** page:
+On the **Admin** page, start with **Overview**: its launch checklist shows which of the items below are still sample data, with a button to fix each one, and **Mark done** for things the app can't check itself (like SMTP). Below it: sign-ups per section, how many students used the app this week, and which sections have a shared timetable (totals only; nobody's individual activity is shown).
+
 
 - **Timetable:** optional. Students can sync their own Google Calendar on the Classes tab, which already has their real sessions. A section timetable is only needed for *Compare people* and for students who don't sync. Easiest is a spreadsheet. Make columns **Year, Section, Day, Period, Code, Course, Room** (Period = 1–6 or a start time like 09:15), copy the rows, paste them into **Import from a spreadsheet**, check the preview, **Import**. *Download current timetable (CSV)* gives you a starting file. You can also edit one section at a time in the grid.
 - **Mess menu:** each month, upload the mess committee's Excel file (or paste its cells) in **Admin → Mess menu → Update from the mess committee's Excel**, check the preview, and replace. Photos/PDFs can't be read; old `.xls` files need *Save As .xlsx*. Check **Meal timings** at the bottom too; **remove** deletes a meal (e.g. Snacks) with its menu and ratings.

@@ -5,20 +5,22 @@ import { supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import type { BusTime, Contact, Hostel, Slot, Year } from '../lib/types'
 import { Chips } from '../components/Bits'
+import { AdminOverview } from './AdminOverview'
 import { AdminsAdmin, AutosAdmin, FacilitiesAdmin, FeedbackAdmin, MenuImport, ShuttleAdmin, TimetableImport, UsageAdmin } from './AdminMore'
 
-type Tab = 'timetable' | 'mess' | 'feedback' | 'bus' | 'contacts' | 'hostels' | 'facilities' | 'slots' | 'admins' | 'usage'
+type Tab = 'overview' | 'timetable' | 'mess' | 'feedback' | 'bus' | 'contacts' | 'hostels' | 'facilities' | 'slots' | 'admins' | 'usage'
 const DAYNAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export function Admin() {
   const { isAdmin } = useMe()
-  const [tab, setTab] = useState<Tab>('timetable')
+  const [tab, setTab] = useState<Tab>('overview')
   if (!isAdmin) return <div className="panel narrow"><h2>Council admin</h2><p>You don’t have admin access. Ask an existing admin to add you (see docs/SETUP.md, step 6).</p></div>
   return (
     <section>
       <div className="hd"><div><h2>Council admin</h2><p className="sub">Changes apply for everyone as soon as you save.</p></div></div>
-      <Chips label="Admin area" value={tab} onChange={setTab} options={[['timetable', 'Timetable'], ['mess', 'Mess menu'], ['feedback', 'Mess feedback'], ['bus', 'Transport'], ['contacts', 'Contacts'], ['hostels', 'Hostels'], ['facilities', 'Facilities'], ['slots', 'Class timings'], ['admins', 'Admins'], ['usage', 'Usage & clean-up']]} />
+      <Chips label="Admin area" value={tab} onChange={setTab} options={[['overview', 'Overview'], ['timetable', 'Timetable'], ['mess', 'Mess menu'], ['feedback', 'Mess feedback'], ['bus', 'Transport'], ['contacts', 'Contacts'], ['hostels', 'Hostels'], ['facilities', 'Facilities'], ['slots', 'Class timings'], ['admins', 'Admins'], ['usage', 'Usage & clean-up']]} />
       <p className="note" style={{ margin: '0 0 12px' }}>Notices are posted from the Notices tab, polls and elections from the Polls tab, complaint replies from the Complaints tab.</p>
+      {tab === 'overview' && <AdminOverview onTab={t => { setTab(t); window.scrollTo({ top: 0 }) }} />}
       {tab === 'timetable' && <TimetableAdmin />}
       {tab === 'mess' && <MessAdmin />}
       {tab === 'bus' && <><ShuttleAdmin /><AutosAdmin /><h3>City bus (campus ↔ city)</h3><BusAdmin /></>}

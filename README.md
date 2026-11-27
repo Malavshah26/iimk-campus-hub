@@ -20,7 +20,7 @@ Six main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls
 | **Buy & sell** | Sell, rent out or ask for books, cycles, coolers, room items, with photos |
 | **Complaints** | Hostel, Wi-Fi, mess… issues with “me too” votes; council sets open / in progress / fixed and replies |
 | **Contacts** | Emergency helplines and IIMK offices, tap to call or email |
-| **Admin** | Timetable (incl. paste from Excel), mess menu (Excel upload) and feedback, transport (shuttle sheet and auto list paste), contacts, hostels, facilities, class timings, admins, usage & clean-up |
+| **Admin** | **Overview**: launch checklist (what's still sample data, one tap to fix) and sign-ups/activity per section; timetable (incl. paste from Excel), mess menu (Excel upload) and feedback, transport (shuttle sheet and auto list paste), contacts, hostels, facilities, class timings, admins, usage & clean-up |
 
 Also: **search everything** (header button, `/` or Ctrl+K: pages, notices, polls, events, lost & found, buy & sell, contacts and the mess menu; a result opens that exact item), **Light / Dark / Auto** theme in Profile, an **Install app** button (one tap on Android/desktop Chrome, step-by-step on iPhone) with proper app icons, a 4-step intro for new students (profile, calendar sync, notifications), opt-in birthdays shown to your own section on the home screen, works offline for timetable/menu/bus/contacts, installable on phones, in-app notifications (wash done, ride joined, complaint updated, new notice or poll, event and booking reminders, evening attendance reminder), and a daily keep-alive so the free database doesn’t pause.
 

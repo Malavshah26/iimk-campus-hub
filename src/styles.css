@@ -426,7 +426,23 @@ button.hbtn{background:transparent;cursor:pointer;gap:6px;font-family:inherit}
 /* Install offer */
 .banner .btn{width:auto;height:auto;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px}
 .banner .bmsg{flex:1;font-size:15px;min-width:12em}
+.banner.nudge > a,.banner.nudge > .bmsg{flex:1 1 220px}
 .banner .bmsg span{color:var(--mut)}
 .appic{width:36px;height:36px;border-radius:9px;flex:none}
 .steps.lg{font-size:16px;display:grid;gap:8px;padding-left:22px}
 .ico{vertical-align:-3px;color:var(--hi)}
+
+/* Admin overview */
+.ovw{max-width:920px}
+.chk{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.chk b{font-weight:600;font-size:15.5px}
+.chkmark{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:14px;color:var(--onhi);margin-top:1px}
+.chk.ok .chkmark{background:var(--hi);border-color:var(--hi)}
+.chk.ok b{color:var(--mut)}
+.chkacts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center}
+.chkacts .btn{min-height:36px;padding:4px 12px;font-size:14px}
+.ovtiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px}
+.ovtiles .big{font-size:clamp(26px,3.4vw,34px);margin-top:2px}
+table.adm.ovtable{min-width:520px;border-spacing:0}
+table.adm.ovtable th,table.adm.ovtable td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+@media(max-width:600px){.chk{grid-template-columns:28px minmax(0,1fr)}.chkacts{grid-column:2;justify-content:flex-start}}

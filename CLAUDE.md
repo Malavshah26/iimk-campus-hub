@@ -10,7 +10,7 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   sub-tabs that keep their own `#route`; a header opens its last-used tab (`hub.lastTab`). Group badges sum the tabs'.
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
 - No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life, 0003 shuttle,
-  0004 section sessions, 0005 contact emails, 0006 polls + birthdays, 0007 lost & found). New
+  0004 section sessions, 0005 contact emails, 0006 polls + birthdays, 0007 lost & found, 0008 admin overview). New
   schema changes go in a new numbered file that is safe to re-run (`if not exists`, `drop policy if exists`).
 - Server code (Vercel functions): `api/keepalive.js`, a daily cron calling `rpc/ping` so the free project doesn't
   pause; `api/ics.js`, which fetches a student's calendar .ics (campus JWT required, Google/Outlook hosts only).
@@ -94,6 +94,12 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   for 30 days); iPhone gets Share -> Add to Home Screen steps. PNG icons in public/ are drawn from icon.svg's shapes.
   `Modal` (`src/components/Modal.tsx`) renders into <body> via a portal. Don't reuse the class names `top` or `big`
   for new things: `.top p` (header) and `.big` already have meanings in styles.css.
+- Admin -> Overview (0008, `src/pages/AdminOverview.tsx`, default admin tab): launch checklist computed from reference data
+  (sample meal times / washer counts / facilities / menu from seed.sql, missing contact types, autos, shuttle, admins >= 2,
+  pinned notice, sections with shared timetables) plus `admin_checks` rows for items ticked by hand (SMTP etc.).
+  `admin_overview()` returns totals only (students, new this week, active today/7/30 days, per-section counts, open items).
+  `last_seen` = one row per student (date only, set to today by trigger), written once a day by the app; students read
+  only their own row and admins never read it directly.
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
   open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables

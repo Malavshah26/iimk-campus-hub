@@ -188,6 +188,12 @@ function Shell() {
     return () => window.removeEventListener('hub:tour', on)
   }, [])
   const endTour = () => { saveLocal(tourKey(uid), true); setTour(false) }
+  // Once a day: note that this student opened the app (only totals ever reach admins).
+  useEffect(() => {
+    const k = 'hub.seen.' + uid, d = dstr(new Date())
+    if (local(k, '') === d) return
+    supabase.from('last_seen').upsert({ user_id: uid }).then(({ error }) => { if (!error) saveLocal(k, d) })
+  }, [uid])
   const [online, setOnline] = useState(() => navigator.onLine)
   useEffect(() => {
     const on = () => setOnline(true), off = () => setOnline(false)
