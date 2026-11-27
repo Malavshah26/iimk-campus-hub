@@ -46,6 +46,11 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   matching codes. First connect auto-filters to "Session No" when the calendar has other events; Classes offers
   to fix the profile section if it differs from the calendar's section. The owner is in Section C. The owner's classes live in their
   @iimk.ac.in Google account, not the personal Gmail connected to Claude.
+- Duplicate classes: real IIMK calendars contain the same invite twice (two UIDs, same title/time) and several sessions of
+  one course stacked in one slot ("RIL(LSM)" sessions 18-24 all Tue 14:40). `mergeEvents()` (`src/lib/calMerge.ts`) makes
+  one class per course+section+start time ("Sessions 18–24"); different courses at the same time stay separate. Both
+  `myClasses()` and `shareFromCalendar()` use it. Important: `sync_section_sessions()` fails the WHOLE sync ("ON CONFLICT
+  DO UPDATE command cannot affect row a second time") if two rows share (day, starts, code), so never send unmerged rows.
 - Section timetables (0004 `section_sessions`): after a calendar sync, `useShareSessions` sends the student's
   own-section "Session No" sessions (today-7..+60 days) to `sync_section_sessions()`, which takes year/section from
   the caller's profile, replaces that window, ignores syncs with <3 sessions. `sectionClasses()` (src/lib/sections.ts)

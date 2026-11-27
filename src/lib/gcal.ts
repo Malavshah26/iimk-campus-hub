@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { parseIcs, type CalEvent } from './ical'
 import { looksLikeSession, parseSessionTitle } from './sessionTitle'
+import { mergeEvents, sessionsLabel } from './calMerge'
 import type { ClassItem, RefData } from './ref'
 import { sectionClasses } from './sections'
 import { supabase } from './supabase'
@@ -117,15 +118,15 @@ export function myClasses(ref: RefData, date: Date, year: string, section: strin
   // The calendar is the source of truth: its titles group attendance by course.
   const names = new Map<string, string>()
   for (const r of ref.timetable) if (!names.has(r.course_code.toLowerCase()) || (r.year === year && r.section === section)) names.set(r.course_code.toLowerCase(), r.course_name)
-  return calEventsOn(state, date).map(e => {
+  // Duplicates in the calendar (an invite sent twice, sessions stacked in one slot) become one class.
+  return mergeEvents(calEventsOn(state, date)).map(e => {
     const starts = hhmm(e.start), ends = hhmm(e.end)
     const slot = ref.slots.find(s => overlaps(starts, ends, s.starts, s.ends))?.slot || 0
-    const s = parseSessionTitle(e.title) // "Session No: 15 - EE(C)-LME-(CR B1)"
-    if (s) return {
-      slot, starts, ends, code: s.code, name: names.get(s.code.toLowerCase()) || s.code,
-      room: s.room ? 'Room ' + s.room : e.location || null, detail: [`Session ${s.session}`, s.faculty].filter(Boolean).join(' · '),
+    if (e.isSession) return { // "Session No: 15 - EE(C)-LME-(CR B1)"
+      slot, starts, ends, code: e.code, name: names.get(e.code.toLowerCase()) || e.code,
+      room: e.room ? 'Room ' + e.room : e.location || null, detail: [sessionsLabel(e.sessions), e.faculty].filter(Boolean).join(' · '),
     }
-    return { slot, starts, ends, code: courseKey(e.title), name: e.title, room: e.location || null }
+    return { slot, starts, ends, code: e.code, name: e.title, room: e.location || null }
   })
 }
 
@@ -142,6 +143,4 @@ export function calendarSection(cal: CalState | null): string {
   return best && best[1] >= 3 && best[1] / total >= 0.8 ? best[0] : ''
 }
 
-/** "FM-I Financial Management I (Sec A) - rescheduled" -> "FM-I Financial Management I": one attendance group per course. */
-export const courseKey = (title: string) =>
-  title.replace(/\s*[-–|:]\s*(rescheduled|extra|make[- ]?up|shifted|moved|cancelled|tentative)\b.*$/i, '').replace(/\s*\((sec(tion)?|grp|group)[^)]*\)\s*/gi, ' ').trim().slice(0, 40) || title.slice(0, 40)
+export { courseKey } from './calMerge'

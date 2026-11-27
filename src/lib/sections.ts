@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CalState } from './gcal'
 import { classesFor, type ClassItem, type RefData } from './ref'
-import { parseSessionTitle } from './sessionTitle'
+import { mergeEvents } from './calMerge'
 import { supabase } from './supabase'
 import { dstr, hhmm, local, overlaps, saveLocal } from './util'
 
@@ -105,11 +105,12 @@ export function sectionClasses(ref: RefData, date: Date, year: string, section: 
 /** Shares this student's own-section class sessions from their calendar. Returns how many were saved. */
 export async function shareFromCalendar(cal: CalState, year: string, section: string): Promise<number> {
   const [from, to] = shareWindow()
-  const rows = cal.events.flatMap(e => {
-    const s = parseSessionTitle(e.title)
+  // One row per course and start time: the database refuses a sync that names the same class twice
+  // (calendars do contain doubled invites and sessions stacked in one slot).
+  const rows = mergeEvents(cal.events).flatMap(e => {
     const day = dstr(new Date(e.start))
-    if (!s || s.section.toUpperCase() !== section.toUpperCase() || day < from || day > to) return []
-    return [{ day, starts: hhmm(e.start), ends: hhmm(e.end), code: s.code, session: s.session, faculty: s.faculty, room: s.room }]
+    if (!e.isSession || e.section.toUpperCase() !== section.toUpperCase() || day < from || day > to) return []
+    return [{ day, starts: hhmm(e.start), ends: hhmm(e.end), code: e.code, session: e.sessions.length ? String(Math.min(...e.sessions)) : '', faculty: e.faculty.slice(0, 20), room: e.room.slice(0, 20) }]
   })
   if (rows.length < 3) return 0
   const { data, error } = await supabase.rpc('sync_section_sessions', { p_from: from, p_to: to, p_rows: rows })
