@@ -116,7 +116,7 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   Admins never read rooms; `chat_reported()` / `chat_moderate()` show and remove reported messages. Unread badge from
   `hub.chatSeen`. No chat notifications on purpose (noise). Don't reuse class `who` (the intro uses it): chat uses `msgwho`.
 - Medical (`src/pages/Medical.tsx`): call buttons come from contacts group `Medical` (names with Ambulance / Dispensary;
-  the owner will supply the numbers). `medicine_requests` are private to the student and `medical_desk` members (set by
+  0010 adds IIMK Ambulance 0495 280 9166 and IIMK Dispensary +91 81298 51566, given by the owner). `medicine_requests` are private to the student and `medical_desk` members (set by
   admins via `medical_desk_set`), not all admins; guard trigger: students may only cancel, the desk only sets status/reply.
 - Carpool: `rides.seats` = everyone in the cab (UI asks "seats free for others" 1–6 and stores +1). Airport cabs:
   `trip` to_airport/from_airport, `flight`, `flight_time`; matched by direction and time. Shuttle tab: From/To selects
