@@ -3,6 +3,18 @@ import { sectionLabel } from './util'
 /** Who a notice, event or poll is for. All null = everyone. A section always comes with its year. */
 export interface Audience { year: string | null; section: string | null; hostel: string | null }
 export const EVERYONE: Audience = { year: null, section: null, hostel: null }
+export type AudienceKind = 'all' | 'batch' | 'section' | 'hostel'
+export const kindOf = (a: Audience): AudienceKind => (a.hostel ? 'hostel' : a.section ? 'section' : a.year ? 'batch' : 'all')
+
+/**
+ * IIMK batches are numbered: the batch that joined in June 2026 is PGP30 (class invites go to pgp30…@iimk.ac.in).
+ * Year 1 is the newest batch, Year 2 the one before; the numbers move on every June.
+ */
+const FIRST = { batch: 30, joined: 2026 }
+export function batchName(year: string, now = new Date()): string {
+  const academicYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1 // starts in June
+  return 'PGP' + (FIRST.batch + (academicYear - FIRST.joined) - (year === '2' ? 1 : 0))
+}
 
 /** Audience <-> one select value: '' | 'y:1' | 's:1:C' | 'h:K1'. */
 export function encodeAudience(a: Partial<Audience>): string {
@@ -19,14 +31,15 @@ export function decodeAudience(v: string): Audience {
   return EVERYONE
 }
 
-export const yearLabel = (y: string) => (y === '1' ? 'Year 1 (PGP 1)' : y === '2' ? 'Year 2 (PGP 2)' : 'Year ' + y)
+/** "PGP30 (Year 1)" */
+export const yearLabel = (y: string) => `${batchName(y)} (Year ${y})`
 
-/** 'Everyone' | 'Year 1' | 'Year 1 · Section C' | 'Hostel K1'. */
+/** 'Everyone' | 'PGP30' | 'PGP30 · Section C' | 'Hostel K1'. */
 export function audienceLabel(a: Partial<Audience> | null | undefined): string {
   if (!a) return 'Everyone'
   if (a.hostel) return 'Hostel ' + a.hostel
-  if (a.year && a.section) return `Year ${a.year} · ${sectionLabel(a.section)}`
-  if (a.year) return `Year ${a.year}`
+  if (a.year && a.section) return `${batchName(a.year)} · ${sectionLabel(a.section)}`
+  if (a.year) return batchName(a.year)
   return 'Everyone'
 }
 export const isEveryone = (a: Partial<Audience> | null | undefined) => !a || (!a.year && !a.section && !a.hostel)

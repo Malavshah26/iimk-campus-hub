@@ -529,3 +529,6 @@ table.shgrid tr.past td{opacity:.42}
 table.shgrid tr.next td{background:var(--pale)}
 table.shgrid tr.next td:first-child{box-shadow:inset 3px 0 0 var(--hi)}
 @media(max-width:480px){table.shgrid td,table.shgrid th{padding:6px 7px}table.shgrid td{font-size:14px}}
+/* Audience picker in steps */
+.audpick .row2{margin-top:2px}
+.audpick .seg button{font-size:14px;padding:0 4px}

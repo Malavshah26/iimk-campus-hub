@@ -111,7 +111,10 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   only their own row and admins never read it directly.
 - 0009 audiences: notices, events and polls have year/section/hostel (all null = everyone); `in_audience()` drives RLS
   (and therefore realtime). Students may aim events only at groups they're in; admins at any. `AudiencePicker` +
-  `src/lib/audience.ts`. `poll_create` gained `p_hostel` (old 7-arg version dropped).
+  `src/lib/audience.ts`. `poll_create` gained `p_hostel` (old 7-arg version dropped). Admins pick in steps (Everyone /
+  A batch / A section / A hostel, then the batch, batch+section or hostel). Batches show as PGP numbers: `batchName()`
+  assumes the batch that joined in June 2026 is PGP30 (= Year 1 in 2026-27) and rolls over each June; change `FIRST`
+  in audience.ts if that's off.
 - Chat (`src/pages/Chat.tsx`, `src/lib/chat.ts`): rooms `sec:<year>:<section>` and `hostel:<code>`; `chat_room_ok()` = member.
   Admins never read rooms; `chat_reported()` / `chat_moderate()` show and remove reported messages. Unread badge from
   `hub.chatSeen`. No chat notifications on purpose (noise). Don't reuse class `who` (the intro uses it): chat uses `msgwho`.
