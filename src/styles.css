@@ -454,3 +454,78 @@ table.adm.ovtable th,table.adm.ovtable td{padding:7px 10px;border-bottom:1px sol
 .viewbar .btn{min-height:36px;padding:4px 12px;font-size:14px}
 /* Classroom badge on each class */
 .cls h3 .room{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 9px 2px 7px;border-radius:99px;background:var(--leafbg);color:var(--hi);border:1px solid color-mix(in srgb,var(--hi) 30%,transparent);font:600 13.5px/1.4 Inter,sans-serif;letter-spacing:.01em;vertical-align:2px;white-space:nowrap}
+
+/* Carpool: riders who joined your ride */
+.riders{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rider{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--line);border-radius:99px;font-size:14px}
+.rider a{color:var(--hi);font-weight:600;text-decoration:none}
+.rider a:hover{text-decoration:underline}
+
+/* Chat */
+.chatwrap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column}
+.chathead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--soft)}
+.chathead .meta{margin:0}
+.chatlog{height:min(60vh,560px);overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:var(--soft)}
+.chatlog .empty{margin:auto 0}
+.chatday{text-align:center;margin:10px 0 6px}
+.chatday span{font-size:12.5px;color:var(--mut);background:var(--bg);border:1px solid var(--line);padding:2px 10px;border-radius:99px}
+.msg{display:flex;flex-direction:column;align-items:flex-start;max-width:min(80%,560px);margin-top:8px}
+.msg.cont{margin-top:2px}
+.msg.mine{align-self:flex-end;align-items:flex-end}
+.msg .msgwho{font-size:12.5px;color:var(--hi);margin:0 0 2px 10px;font-weight:600}
+.bubble{padding:7px 12px 6px;border-radius:14px 14px 14px 4px;background:var(--bg);border:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.4}
+.msg.mine .bubble{border-radius:14px 14px 4px 14px;background:var(--leafbg);border-color:color-mix(in srgb,var(--hi) 25%,var(--line))}
+.bubble .tm{display:inline-block;margin-left:8px;font-size:11px;color:var(--mut);vertical-align:-2px}
+.msgacts{opacity:0;transition:opacity .15s;margin:1px 6px 0;min-height:18px}
+.msg:hover .msgacts,.msg:focus-within .msgacts{opacity:1}
+@media(hover:none){.msgacts{opacity:.8}}
+.msgacts .linkbtn{margin:0;font-size:12px}
+.msgacts .btn.tiny{min-height:28px;font-size:12.5px}
+.composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--bg);align-items:flex-end}
+.composer textarea{flex:1;min-height:44px;max-height:140px;resize:none}
+.composer .btn{flex:none}
+
+/* Medical */
+.emerg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px}
+.btn.em{flex-direction:column;align-items:flex-start;gap:2px;min-height:64px;padding:10px 16px;background:var(--red);border-color:var(--red);color:#fff;text-align:left}
+.btn.em b{font-size:16px}
+.btn.em span{font-size:14px;opacity:.9;font-weight:500}
+.btn.em.soft{background:var(--redbg);color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+.btn.em.off{opacity:.55;cursor:default;background:var(--soft);color:var(--mut);border-color:var(--line)}
+
+/* Shuttle */
+.shpick{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:end;margin-bottom:14px;max-width:620px}
+.shpick .lab{margin-top:0}
+.shpick .swap{min-height:44px;width:44px;padding:0;font-size:18px}
+.shnext{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:var(--pale);box-shadow:inset 4px 0 0 var(--hi)}
+.shnext .when{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.shnext .when span{color:var(--mut);font-size:14.5px}
+.shnext .when b{font:700 clamp(30px,5vw,40px)/1 Sora,sans-serif;color:var(--ink)}
+.stopline{list-style:none;margin:14px 0 4px;padding:0;display:flex;flex-wrap:wrap;gap:0}
+.stopline li{position:relative;display:flex;flex-direction:column;align-items:flex-start;padding:0 18px 0 0;min-width:76px}
+.stopline li::before{content:"";position:absolute;left:5px;right:0;top:5px;height:2px;background:color-mix(in srgb,var(--hi) 45%,var(--line))}
+.stopline li:last-child::before{display:none}
+.stopline .dot{width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--hi);position:relative;z-index:1}
+.stopline li.here .dot{background:var(--hi)}
+.stopline li.dest .dot{background:var(--hi);box-shadow:0 0 0 3px var(--leafbg)}
+.stopline li.passed{opacity:.5}
+.stopline b{font-size:14px;margin-top:6px}
+.stopline small{font-size:13px;color:var(--mut)}
+.shnext .later{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.shnext .later .meta{margin:0}
+.shdir{margin-top:16px}
+.shdir h4{margin:0 0 6px;font:600 15px Inter,sans-serif;color:var(--mut)}
+table.shgrid{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+table.shgrid th{position:sticky;top:0;background:var(--bg);text-align:left;font:600 13px Inter,sans-serif;color:var(--mut);padding:6px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+table.shgrid td{padding:7px 10px;border-bottom:1px solid var(--line);font-size:15px;white-space:nowrap}
+table.shgrid td.start{font-weight:700}
+table.shgrid td.none{color:var(--line);text-align:left}
+table.shgrid td.nt{white-space:normal}
+table.shgrid td.nt small{display:block;color:var(--mut);font-size:12.5px}
+table.shgrid .est{color:var(--mut);margin-right:1px}
+table.shgrid th.from,table.shgrid th.to{color:var(--hi)}
+table.shgrid td.from,table.shgrid td.to{background:var(--leafbg);font-weight:700}
+table.shgrid tr.past td{opacity:.42}
+table.shgrid tr.next td{background:var(--pale)}
+table.shgrid tr.next td:first-child{box-shadow:inset 3px 0 0 var(--hi)}
+@media(max-width:480px){table.shgrid td,table.shgrid th{padding:6px 7px}table.shgrid td{font-size:14px}}

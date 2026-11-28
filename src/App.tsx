@@ -18,6 +18,7 @@ import { Notifier } from './components/Notifier'
 import { AttendanceNudge } from './components/AttendanceNudge'
 import { BirthdayCard } from './components/Birthday'
 import { useUnvotedPolls } from './lib/polls'
+import { myRooms, useChatUnread } from './lib/chat'
 import { InstallBanner } from './components/Install'
 
 // Each tab is downloaded only when first opened, so the app starts faster on slow campus Wi-Fi.
@@ -39,6 +40,8 @@ const Events = page(() => import('./pages/Events'), 'Events')
 const Complaints = page(() => import('./pages/Complaints'), 'Complaints')
 const Book = page(() => import('./pages/Book'), 'Book')
 const Polls = page(() => import('./pages/Polls'), 'Polls')
+const Chat = page(() => import('./pages/Chat'), 'Chat')
+const Medical = page(() => import('./pages/Medical'), 'Medical')
 const Tour = page(() => import('./components/Tour'), 'Tour')
 const Search = page(() => import('./components/Search'), 'Search')
 
@@ -46,10 +49,11 @@ const Search = page(() => import('./components/Search'), 'Search')
 const GROUPS = [
   { key: 'classes', label: 'Classes', tabs: [['classes', 'Classes']] },
   { key: 'updates', label: 'Updates', tabs: [['notices', 'Notices'], ['polls', 'Polls'], ['events', 'Events']] },
+  { key: 'chat', label: 'Chat', tabs: [['chat', 'Chat']] },
   { key: 'food', label: 'Mess & laundry', tabs: [['mess', 'Mess menu'], ['laundry', 'Laundry']] },
   { key: 'transport', label: 'Transport', tabs: [['bus', 'Shuttle'], ['autos', 'Autos & taxis'], ['rides', 'Carpool']] },
   { key: 'market', label: 'Market', tabs: [['market', 'Buy & sell'], ['lost', 'Lost & found']] },
-  { key: 'campus', label: 'Campus', tabs: [['book', 'Book a room'], ['complaints', 'Complaints'], ['contacts', 'Contacts']] },
+  { key: 'campus', label: 'Campus', tabs: [['book', 'Book a room'], ['medical', 'Medical'], ['complaints', 'Complaints'], ['contacts', 'Contacts']] },
 ] as const
 type Group = (typeof GROUPS)[number]
 type Route = Group['tabs'][number][0] | 'profile' | 'admin'
@@ -170,6 +174,7 @@ function Shell() {
   useShareSessions(cal, profile.year, profile.section)
   const unseen = route === 'notices' ? 0 : unseenCount(notices.data)
   const unvoted = useUnvotedPolls(uid, profile)
+  const chatUnread = Object.values(useChatUnread(uid, myRooms(profile))).reduce((a, b) => a + b, 0)
   // First-run intro; Profile -> "Show the intro again" brings it back.
   const [tour, setTour] = useState(() => !local(tourKey(uid), false))
   const [searching, setSearching] = useState(false)
@@ -218,7 +223,7 @@ function Shell() {
           {!loading && <NowBoard />}
         </div>
       </header>
-      <MainNav route={route} badges={{ notices: unseen, polls: unvoted }} />
+      <MainNav route={route} badges={{ notices: unseen, polls: unvoted, chat: route === 'chat' ? 0 : chatUnread }} />
       <main className="wrap">
         {!online && <div className="status show">You’re offline. Showing the timetable, menu and bus times saved on this device.</div>}
         {online && error && (haveData
@@ -239,6 +244,8 @@ function Shell() {
           {route === 'bus' && <Bus />}
           {route === 'autos' && <Autos />}
           {route === 'polls' && <Polls />}
+          {route === 'chat' && <Chat />}
+          {route === 'medical' && <Medical />}
           {route === 'mess' && <Mess />}
           {route === 'complaints' && <Complaints />}
           {route === 'contacts' && <Contacts />}

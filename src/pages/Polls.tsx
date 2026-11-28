@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useMe } from '../lib/auth'
-import { useRef_ } from '../lib/ref'
 import { explain, supabase } from '../lib/supabase'
 import { useToast } from '../lib/toast'
 import { useLive, useTick } from '../lib/useLive'
@@ -9,6 +8,8 @@ import { dstr, sectionLabel } from '../lib/util'
 import { audience, canVote, isOpen, myBallot, pollsChanged, rememberBallot, whenLabel } from '../lib/polls'
 import { Text } from '../components/Text'
 import { Empty, ErrorNote, Loading, Seg } from '../components/Bits'
+import { AudiencePicker } from '../components/AudiencePicker'
+import { audienceLabel, EVERYONE, type Audience } from '../lib/audience'
 import { useFocusItem } from '../lib/focus'
 
 type MyVote = { poll_id: string; option_id: number | null }
@@ -131,6 +132,7 @@ function PollCard({ p, mine, t, admin, onChange }: { p: Poll; mine?: MyVote; t?:
   return (
     <div id={'it-' + p.id} className={'card poll' + (live ? '' : ' closed')}>
       <div className="ch"><h3>{p.title}</h3>
+        {p.sample && <span className="tag t-sun">Sample</span>}
         <span className={'tag ' + (live ? 't-ok' : '')}>{live ? (p.secret ? 'Election · open' : 'Open') : 'Closed'}</span></div>
       <div className="meta">{audience(p)} · {live ? 'closes ' : 'closed '}{whenLabel(p.closes_at)} · {t ? `${t.voters} voted` : '…'}{p.secret ? ' · secret ballot' : ''}</div>
       {p.details && <Text text={p.details} />}
@@ -150,14 +152,13 @@ function PollCard({ p, mine, t, admin, onChange }: { p: Poll; mine?: MyVote; t?:
 }
 
 function NewPoll({ onDone }: { onDone: () => void }) {
-  const { ref } = useRef_()
   const toast = useToast()
   const tomorrow = dstr(new Date(Date.now() + 864e5))
   const [title, setTitle] = useState('')
   const [details, setDetails] = useState('')
   const [kind, setKind] = useState<'poll' | 'election'>('poll')
   const [options, setOptions] = useState(['', ''])
-  const [who, setWho] = useState('')
+  const [who, setWho] = useState<Audience>(EVERYONE)
   const [day, setDay] = useState(tomorrow)
   const [time, setTime] = useState('20:00')
   const [busy, setBusy] = useState(false)
@@ -167,18 +168,18 @@ function NewPoll({ onDone }: { onDone: () => void }) {
     e.preventDefault()
     const opts = options.map(o => o.trim()).filter(Boolean)
     if (new Set(opts.map(o => o.toLowerCase())).size < 2) return toast('Give at least two different options.')
-    const [year, section] = who.split('|')
     const closes = new Date(`${day}T${time}:00`)
     if (isNaN(closes.getTime()) || closes.getTime() < Date.now() + 10 * 60000) return toast('Pick a closing time at least 10 minutes from now.')
-    if (kind === 'election' && !confirm(`Start this election for ${audience({ year: (year || null) as Poll['year'], section: section || null })}?\n\nOnce it starts, the question and candidates can’t be edited, and results stay hidden until ${day} ${time}.`)) return
+    if (kind === 'election' && !confirm(`Start this election for ${audienceLabel(who)}?\n\nOnce it starts, the question and candidates can’t be edited, and results stay hidden until ${day} ${time}.`)) return
     setBusy(true)
     const { error } = await supabase.rpc('poll_create', {
       p_title: title.trim(), p_details: details.trim() || null, p_secret: kind === 'election',
-      p_year: year || null, p_section: section || null, p_closes: closes.toISOString(), p_options: opts,
+      p_year: who.year, p_section: who.section, p_closes: closes.toISOString(), p_options: opts,
+      ...(who.hostel ? { p_hostel: who.hostel } : {}),
     })
     setBusy(false)
     if (error) return toast(explain(error.message))
-    setTitle(''); setDetails(''); setOptions(['', '']); setKind('poll'); setWho('')
+    setTitle(''); setDetails(''); setOptions(['', '']); setKind('poll'); setWho(EVERYONE)
     toast(kind === 'election' ? 'Election started. Everyone it’s for gets a notification.' : 'Poll started.')
     onDone()
   }
@@ -201,13 +202,7 @@ function NewPoll({ onDone }: { onDone: () => void }) {
         {options.length > 2 && <button type="button" className="linkbtn" onClick={() => setOptions(options.filter((_, j) => j !== i))}>remove</button>}
       </div>)}
       {options.length < 12 && <button type="button" className="linkbtn" onClick={() => setOptions([...options, ''])}>+ Add an option</button>}
-      <label htmlFor="pl-w">Who can vote</label>
-      <select id="pl-w" value={who} onChange={e => setWho(e.target.value)}>
-        <option value="">Everyone</option>
-        <option value="1">Year 1</option>
-        <option value="2">Year 2</option>
-        {(['1', '2'] as const).flatMap(y => ref.sections.map(s => <option key={y + s.code} value={`${y}|${s.code}`}>Year {y} · {s.label}</option>))}
-      </select>
+      <AudiencePicker id="pl-w" label="Who can vote" value={who} onChange={setWho} />
       <div className="row2">
         <div><label htmlFor="pl-day">Closes on</label><input id="pl-day" type="date" required min={dstr(new Date())} value={day} onChange={e => setDay(e.target.value)} /></div>
         <div><label htmlFor="pl-time">at</label><input id="pl-time" type="time" required value={time} onChange={e => setTime(e.target.value)} /></div>

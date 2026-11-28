@@ -10,7 +10,7 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   sub-tabs that keep their own `#route`; a header opens its last-used tab (`hub.lastTab`). Group badges sum the tabs'.
 - Supabase: Postgres + row-level security, email OTP sign-in, private `photos` storage bucket, Realtime.
 - No custom server. All access control lives in `supabase/migrations/` (0001 base, 0002 campus life, 0003 shuttle,
-  0004 section sessions, 0005 contact emails, 0006 polls + birthdays, 0007 lost & found, 0008 admin overview). New
+  0004 section sessions, 0005 contact emails, 0006 polls + birthdays, 0007 lost & found, 0008 admin overview, 0009 audiences/chat/medical/airport/samples). New
   schema changes go in a new numbered file that is safe to re-run (`if not exists`, `drop policy if exists`).
 - Server code (Vercel functions): `api/keepalive.js`, a daily cron calling `rpc/ping` so the free project doesn't
   pause; `api/ics.js`, which fetches a student's calendar .ics (campus JWT required, Google/Outlook hosts only).
@@ -109,6 +109,20 @@ prototype in a claude.ai chat and was rebuilt here as a real app.
   `admin_overview()` returns totals only (students, new this week, active today/7/30 days, per-section counts, open items).
   `last_seen` = one row per student (date only, set to today by trigger), written once a day by the app; students read
   only their own row and admins never read it directly.
+- 0009 audiences: notices, events and polls have year/section/hostel (all null = everyone); `in_audience()` drives RLS
+  (and therefore realtime). Students may aim events only at groups they're in; admins at any. `AudiencePicker` +
+  `src/lib/audience.ts`. `poll_create` gained `p_hostel` (old 7-arg version dropped).
+- Chat (`src/pages/Chat.tsx`, `src/lib/chat.ts`): rooms `sec:<year>:<section>` and `hostel:<code>`; `chat_room_ok()` = member.
+  Admins never read rooms; `chat_reported()` / `chat_moderate()` show and remove reported messages. Unread badge from
+  `hub.chatSeen`. No chat notifications on purpose (noise). Don't reuse class `who` (the intro uses it): chat uses `msgwho`.
+- Medical (`src/pages/Medical.tsx`): call buttons come from contacts group `Medical` (names with Ambulance / Dispensary;
+  the owner will supply the numbers). `medicine_requests` are private to the student and `medical_desk` members (set by
+  admins via `medical_desk_set`), not all admins; guard trigger: students may only cancel, the desk only sets status/reply.
+- Carpool: `rides.seats` = everyone in the cab (UI asks "seats free for others" 1–6 and stores +1). Airport cabs:
+  `trip` to_airport/from_airport, `flight`, `flight_time`; matched by direction and time. Shuttle tab: From/To selects
+  (Anywhere allowed), next-shuttle card, direction tables built from the line (`lineOf`, `directions` in Info.tsx).
+- Sample posts (0009): `sample` flag on listings/events/polls, loaded once (settings `samples_loaded`) as the first admin;
+  `admin_remove_samples()` from Admin -> Overview.
 - Notifications (`src/lib/notify.ts`, `src/components/Notifier.tsx`) are local: they fire while the app is
   open. There is no push server. `public/sw.js` is network-first for pages, cache-first for `/assets/`.
 - PostgREST embeds use explicit FK hints (e.g. `profiles!rides_user_id_fkey`) because junction tables

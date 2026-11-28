@@ -15,7 +15,7 @@ type Overview = {
   notices_live: number; notices_pinned: number; events_soon: number; polls_open: number
   lost_open: number; listings_open: number; complaints_open: number; calendars: number
 }
-type Item = { id: string; title: string; done: boolean; auto: boolean; detail: string; fix?: { label: string; tab?: FixTab; href?: string } }
+type Item = { id: string; title: string; done: boolean; auto: boolean; detail: string; fix?: { label: string; tab?: FixTab; href?: string; run?: () => void } }
 
 // What seed.sql and 0002 put in, so the checklist can tell sample data from real data.
 const SAMPLE_MEALS: Record<string, [string, string]> = { b: ['07:30', '09:30'], l: ['12:30', '14:30'], d: ['19:30', '22:00'] }
@@ -35,6 +35,7 @@ export function AdminOverview({ onTab }: { onTab: (t: FixTab) => void }) {
   const [error, setError] = useState<string | null>(null)
   const [ticks, setTicks] = useState<Set<string>>(new Set())
   const [facilities, setFacilities] = useState<string[] | null>(null)
+  const [samples, setSamples] = useState(0)
 
   const load = useCallback(async () => {
     const [ov, ch, fa] = await Promise.all([
@@ -46,7 +47,18 @@ export function AdminOverview({ onTab }: { onTab: (t: FixTab) => void }) {
     if (ov.data) setO(ov.data as Overview)
     setTicks(new Set(((ch.data as { item: string }[] | null) || []).map(r => r.item)))
     setFacilities(((fa.data as { name: string }[] | null) || []).map(f => f.name))
+    // Sample posts from update 0009 (a missing column just counts as none).
+    const n = await Promise.all(['listings', 'events', 'polls'].map(t => supabase.from(t).select('id', { count: 'exact', head: true }).eq('sample', true)))
+    setSamples(n.reduce((a, r) => a + (r.error ? 0 : r.count || 0), 0))
   }, [])
+  const removeSamples = async () => {
+    if (!confirm(`Remove all ${samples} sample posts (Buy & sell, Events, Polls) for everyone?`)) return
+    const { data, error } = await supabase.rpc('admin_remove_samples')
+    if (error) return toast(explain(error.message))
+    const r = data as { listings: number; events: number; polls: number }
+    toast(`Removed ${r.listings + r.events + r.polls} sample posts.`)
+    load()
+  }
   useEffect(() => { load() }, [load])
 
   const tick = async (id: string, done: boolean) => {
@@ -95,6 +107,9 @@ export function AdminOverview({ onTab }: { onTab: (t: FixTab) => void }) {
       detail: o.admins >= 2 ? `${o.admins} admins.` : 'Only one admin. Add another so the app isn’t stuck if you’re away.', fix: { label: 'Admins', tab: 'admins' } },
     { id: 'notice', title: 'A pinned welcome notice for launch', auto: true, done: o.notices_pinned > 0,
       detail: o.notices_pinned ? 'A pinned notice is showing at the top of everyone’s app.' : 'Pin a short notice: what Campus Hub is, how to install it, who to contact.', fix: { label: 'Post a notice', href: '#notices' } },
+    { id: 'samples', title: 'Sample posts removed before launch', auto: true, done: samples === 0,
+      detail: samples ? `${samples} sample posts (Buy & sell, Events, Polls) are showing so the app doesn’t look empty. Remove them once real posts come in.` : 'No sample posts.',
+      fix: { label: 'Remove sample posts', run: removeSamples } },
     { id: 'timetables', title: 'Every section has a shared timetable', auto: true, done: withStudents.length > 0 && shared === withStudents.length,
       detail: withStudents.length ? `${shared} of ${withStudents.length} sections with students have one. One student per section syncing their Google Calendar (Classes tab) fills it for the whole section.` : 'No students yet.' },
   ]
@@ -111,7 +126,8 @@ export function AdminOverview({ onTab }: { onTab: (t: FixTab) => void }) {
         <p className="note" style={{ margin: '2px 0 0' }}>{byHand ? 'Marked done by an admin.' : it.detail}</p>
       </div>
       <div className="chkacts">
-        {!d && it.fix && (it.fix.tab
+        {!d && it.fix && (it.fix.run ? <button className="btn" type="button" onClick={it.fix.run}>{it.fix.label}</button>
+          : it.fix.tab
           ? <button className="btn" type="button" onClick={() => onTab(it.fix!.tab!)}>{it.fix.label}</button>
           : <a className="btn" href={it.fix.href} {...(it.fix.href!.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{it.fix.label}</a>)}
         {!it.done && (byHand

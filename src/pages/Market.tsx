@@ -121,7 +121,7 @@ export function Market() {
               <div id={'it-' + m.id} className={'card lcard' + (done ? ' closed' : '')} key={m.id}>
                 <button type="button" className="th" aria-label={'View photo of ' + m.title} onClick={() => setZoom(m)}><Pic url={url(m.photo_path)} art={CATEGORY_ICON[m.category] || 'box'} alt={m.title} /></button>
                 <div>
-                  <div className="ch"><h3>{m.title}</h3>
+                  <div className="ch"><h3>{m.title}{m.sample && <span className="tag t-sun" style={{ marginLeft: 8, verticalAlign: 2 }}>Sample</span>}</h3>
                     {done ? <span className="tag t-mut">{m.kind === 'rent' ? 'Rented' : m.kind === 'want' ? 'Found' : 'Sold'}</span>
                       : m.kind === 'want' ? <span className="tag t-sun">Wanted</span> : <span className="tag t-ok">{m.kind === 'rent' ? 'For rent' : 'For sale'}</span>}</div>
                   <div className="price">{m.price ? <>{m.kind === 'want' && <small>up to </small>}{rupee(m.price)}{m.unit && <small> / {m.unit}</small>}</> : <small>Price on request</small>}</div>

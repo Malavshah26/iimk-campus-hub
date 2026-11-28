@@ -130,6 +130,17 @@ export function Notifier() {
         const hit = ((data as LostItem[] | null) || []).find(m => matchScore(post, m) >= MATCH_MIN)
         if (hit) alertRef.current('Possible match', `${post.kind === 'found' ? 'Someone found' : 'Someone lost'} “${post.item}”, which looks like your “${hit.item}”. Check Lost & found.`, 'lfm' + post.id)
       })
+      // Medicine requests: mine changed (the desk replied), or a new one arrived (only the desk receives those).
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'medicine_requests', filter: `user_id=eq.${uid}` }, ({ new: r }) => {
+        const row = r as { id: string; items: string; status: string; response: string | null }
+        const what: Record<string, string> = { ready: 'Your medicines are ready', delivered: 'Medicines delivered', unavailable: 'Medicines not available' }
+        if (what[row.status]) alertRef.current(what[row.status], row.response || row.items, 'med' + row.id)
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'medicine_requests' }, ({ new: r }) => {
+        const row = r as { id: string; user_id: string; items: string; urgency: string }
+        if (row.user_id === uid) return
+        alertRef.current(row.urgency === 'now' ? 'Urgent medicine request' : 'New medicine request', row.items, 'medq' + row.id)
+      })
       // Realtime only delivers polls this student can see (row-level security), i.e. ones meant for them.
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'polls' }, ({ new: p }) => {
         const row = p as { id: string; title: string; secret: boolean; created_by: string | null }

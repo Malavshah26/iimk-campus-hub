@@ -3,7 +3,8 @@ import { hashId, useFocusItem } from '../lib/focus'
 import { useRef_ } from '../lib/ref'
 import { useTick } from '../lib/useLive'
 import { DAYS, inFmt, isWeekend, local, mins, norm, nowMin, saveLocal } from '../lib/util'
-import { DEFAULT_STOP, legsFrom, runsToday, showTime, stopsOf, type Leg } from '../lib/shuttle'
+import { HOP_MIN, legsFrom, runsToday, showTime, stopsOf, timeAt } from '../lib/shuttle'
+import type { ShuttleTrip } from '../lib/types'
 import { Chips, Empty } from '../components/Bits'
 import { MealVote, useMealFeedback } from '../components/MealFeedback'
 import { AUTO_GROUP, waMobile } from '../lib/autos'
@@ -49,48 +50,110 @@ function PhoneCard({ c, copied, onCopy, wa }: { c: Contact; copied: string; onCo
 function Shuttle() {
   useTick()
   const { ref } = useRef_()
-  const stops = stopsOf(ref.shuttle)
-  const [from, setFromRaw] = useState(() => { const s = local('hub.stop', DEFAULT_STOP); return stops.includes(s) ? s : stops[0] })
-  const [to, setTo] = useState('')
-  const [early, setEarly] = useState(false)
-  const [table, setTable] = useState(false)
-  const setFrom = (s: string) => { setFromRaw(s); saveLocal('hub.stop', s); if (s === to) setTo('') }
+  const line = lineOf(ref.shuttle)
+  const [from, setFromRaw] = useState(() => { const s = local('hub.shFrom', ''); return line.includes(s) ? s : '' })
+  const [to, setToRaw] = useState(() => { const s = local('hub.shTo', ''); return line.includes(s) ? s : '' })
+  const setFrom = (s: string) => { setFromRaw(s); saveLocal('hub.shFrom', s); if (s) saveLocal('hub.stop', s); if (s && s === to) setTo('') }
+  const setTo = (s: string) => { setToRaw(s); saveLocal('hub.shTo', s) }
+  const swap = () => { const f = from; setFrom(to); setTo(f) }
   const nm = nowMin()
-  const legs = legsFrom(ref.shuttle.filter(t => runsToday(t)), from, to)
-  const past = legs.filter(l => mins(l.at) < nm)
-  const next = legs.find(l => mins(l.at) >= nm)
-  const shown = early ? legs : legs.filter(l => mins(l.at) >= nm)
-  const extra = (l: Leg, isNext: boolean, gone: boolean) => [
-    isNext ? 'Next · in ' + inFmt(mins(l.at) - nm) : gone ? 'Gone' : '',
-    l.trip.note || '',
-    l.i > 0 ? `starts at ${l.trip.stops[0]} ${showTime(l.trip.depart)}` : '',
-  ].filter(Boolean).join(' · ')
+  const todays = ref.shuttle.filter(t => runsToday(t))
+  // Trips that go from `from` to `to` (either can be "anywhere"), with the time at the boarding stop.
+  type L = { trip: ShuttleTrip; i: number; at: string; est: boolean }
+  const legs: L[] = (from
+    ? legsFrom(todays, from, to).map(l => ({ trip: l.trip, i: l.i, at: l.at, est: l.est }))
+    : todays.flatMap(t => {
+      const i = to ? t.stops.findIndex((_, k) => k < t.stops.length - 1 && t.stops.slice(k + 1).includes(to)) : 0
+      if (i < 0) return []
+      const x = timeAt(t, i)
+      return [{ trip: t, i, at: x.t, est: x.est }]
+    })).sort((a, b) => mins(a.at) - mins(b.at))
+  const ahead = legs.filter(l => mins(l.at) >= nm)
+  const next = ahead[0]
+  const serves = (t: ShuttleTrip) => {
+    if (!from && !to) return true
+    const i = from ? t.stops.findIndex((s, k) => s === from && k < t.stops.length - 1) : 0
+    return i >= 0 && (!to || t.stops.slice(i + 1).includes(to))
+  }
+  const dirs = directions(ref.shuttle, line)
+
   return (
-    <div>
-      <div className="hd"><div><h2>Campus shuttle</h2><p className="sub">Pick your stop; the next shuttle is highlighted. Times marked ≈ are estimates (about 5 min between stops).</p></div></div>
-      <span className="lab">I’m at</span>
-      <Chips label="From stop" value={from} onChange={setFrom} options={stops.map(s => [s, s] as [string, string])} />
-      <span className="lab">Going to</span>
-      <Chips label="To stop" value={to} onChange={setTo} options={[['', 'Anywhere'] as [string, string], ...stops.filter(s => s !== from).map(s => [s, s] as [string, string])]} />
-      {past.length > 0 && <p style={{ margin: '0 0 8px' }}><button className="linkbtn" type="button" onClick={() => setEarly(!early)}>{early ? 'Hide' : 'Show'} earlier today ({past.length})</button></p>}
-      <div>
-        {shown.length ? shown.map(l => {
-          const gone = mins(l.at) < nm, isNext = l === next
-          return <div key={l.trip.id} className={'dep shuttle' + (gone ? ' past' : '') + (isNext ? ' next' : '')}>
-            <b>{l.est ? '≈' : ''}{showTime(l.at)}</b>
-            <div>
-              <div className="route">{l.rest.map((r, k) => <span key={k}>→ {r.stop} <small>{r.est ? '≈' : ''}{showTime(r.t)}</small> </span>)}</div>
-              <small>{extra(l, isNext, gone)}</small>
-            </div>
-          </div>
-        }) : <Empty>{legs.length ? 'No more shuttles from here today.' : 'No shuttle goes that way.'}</Empty>}
+    <div className="shuttle2">
+      <div className="hd"><div><h2>Campus shuttle</h2><p className="sub">Times marked ≈ are estimates (about {HOP_MIN} min between stops).</p></div></div>
+      <div className="shpick">
+        <div><label className="lab" htmlFor="sh-from">From</label>
+          <select id="sh-from" value={from} onChange={e => setFrom(e.target.value)}><option value="">Anywhere</option>{line.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+        <button type="button" className="btn swap" aria-label="Swap from and to" onClick={swap}>⇄</button>
+        <div><label className="lab" htmlFor="sh-to">To</label>
+          <select id="sh-to" value={to} onChange={e => setTo(e.target.value)}><option value="">Anywhere</option>{line.filter(s => s !== from).map(s => <option key={s} value={s}>{s}</option>)}</select></div>
       </div>
-      <button className="btn inline" type="button" style={{ marginTop: 14 }} onClick={() => setTable(!table)}>{table ? 'Hide' : 'Show'} full timetable</button>
-      {table && <div className="scroll" style={{ marginTop: 10 }}><table className="adm shtable"><thead><tr><th>Leaves</th><th>Route</th></tr></thead><tbody>
-        {ref.shuttle.map(t => <tr key={t.id}><td className="tm"><b>{showTime(t.depart)}</b></td><td>{t.stops.map((s, i) => <span key={i}>{i ? ' → ' : ''}{s}{i && t.at[i] ? ` (${showTime(t.at[i])})` : ''}</span>)}{t.note ? <small className="meta"> · {t.note}</small> : null}</td></tr>)}
-      </tbody></table></div>}
+
+      {next ? <div className="shnext">
+        <div className="when"><span>Next shuttle{from ? ` from ${short(from)}` : ''}</span><b>{next.est ? '≈' : ''}{showTime(next.at)}</b><span>{mins(next.at) - nm <= 0 ? 'leaving now' : 'in ' + inFmt(mins(next.at) - nm)}</span></div>
+        <ol className="stopline">
+          {next.trip.stops.map((s, k) => {
+            const tk = timeAt(next.trip, k)
+            const passed = k < next.i
+            return <li key={k} className={(k === next.i ? 'here' : '') + (passed ? ' passed' : '') + (to && s === to ? ' dest' : '')}>
+              <span className="dot" /><b>{short(s)}</b><small>{tk.est ? '≈' : ''}{showTime(tk.t)}</small></li>
+          })}
+        </ol>
+        {ahead.length > 1 && <div className="later"><span className="meta">Then</span>{ahead.slice(1, 7).map(l => <span key={l.trip.id + l.at} className="tag t-mut">{l.est ? '≈' : ''}{showTime(l.at)}</span>)}</div>}
+      </div> : <div className="empty">{legs.length ? 'No more shuttles this way today.' : 'No shuttle goes that way.'}</div>}
+
+      <h3 style={{ margin: '22px 0 4px' }}>{from || to ? `Timetable: ${from ? short(from) : 'anywhere'} → ${to ? short(to) : 'anywhere'}` : 'Full timetable'}</h3>
+      <p className="note" style={{ margin: '0 0 10px' }}>{from || to ? <>Only shuttles that go this way. <button className="linkbtn" type="button" onClick={() => { setFrom(''); setTo('') }}>Show all shuttles</button></> : 'Every shuttle, in both directions. Pick From / To above to narrow it down.'}</p>
+      {dirs.map(d => {
+        const rows = d.trips.filter(serves)
+        if (!rows.length) return null
+        const nextRow = rows.find(t => runsToday(t) && mins(timeAt(t, Math.max(0, from ? t.stops.indexOf(from) : 0)).t) >= nm)
+        return <div key={d.title} className="shdir">
+          <h4>{d.title}</h4>
+          <div className="scroll"><table className="shgrid">
+            <thead><tr>{d.cols.map(s => <th key={s} className={s === from ? 'from' : s === to ? 'to' : ''}>{short(s)}</th>)}<th /></tr></thead>
+            <tbody>{rows.map(t => {
+              const lastT = mins(timeAt(t, t.stops.length - 1).t)
+              const past = runsToday(t) && lastT < nm
+              return <tr key={t.id} className={(t === nextRow ? 'next' : '') + (past ? ' past' : '')}>
+                {d.cols.map(s => {
+                  const k = t.stops.indexOf(s)
+                  if (k < 0) return <td key={s} className="none">–</td>
+                  const tk = timeAt(t, k)
+                  return <td key={s} className={(k === 0 ? 'start ' : '') + (s === from ? 'from' : s === to ? 'to' : '')}>{tk.est ? <span className="est">≈</span> : null}{showTime(tk.t)}</td>
+                })}
+                <td className="nt">{t === nextRow ? <span className="tag t-ok">Next</span> : null}{t.note ? <small>{t.note}</small> : null}{t.days !== 'all' ? <small>{t.days === 'weekday' ? 'Mon–Fri' : 'Sat–Sun'}</small> : null}</td>
+              </tr>
+            })}</tbody>
+          </table></div>
+        </div>
+      })}
     </div>
   )
+}
+
+/** Stop names short enough for table headers. */
+const SHORT: Record<string, string> = { 'PGP Auditorium': 'PGP', 'Phase V Campus': 'Phase V', 'C&D Housing': 'C&D', Maingate: 'Main gate' }
+const short = (s: string) => SHORT[s] || (s.length > 12 ? s.split(' ').slice(0, 2).join(' ') : s)
+
+/** The shuttle's line: stops in order along the route, from the trip that visits the most of them. */
+function lineOf(trips: ShuttleTrip[]): string[] {
+  const best = [...trips].sort((a, b) => new Set(b.stops).size - new Set(a.stops).size)[0]
+  const line = best ? [...new Set(best.stops)] : []
+  for (const s of stopsOf(trips)) if (!line.includes(s)) line.push(s)
+  for (const t of trips) for (const s of t.stops) if (!line.includes(s)) line.push(s)
+  return line
+}
+
+/** Trips split by direction along the line, each with its columns in travel order. */
+function directions(trips: ShuttleTrip[], line: string[]) {
+  const down: ShuttleTrip[] = [], up: ShuttleTrip[] = []
+  for (const t of trips) (line.indexOf(t.stops[1]) > line.indexOf(t.stops[0]) ? down : up).push(t)
+  const byTime = (a: ShuttleTrip, b: ShuttleTrip) => mins(a.depart) - mins(b.depart)
+  const rev = [...line].reverse()
+  return [
+    { title: `${short(line[0])} → ${short(line[line.length - 1])}`, cols: line, trips: down.sort(byTime) },
+    { title: `${short(rev[0])} → ${short(rev[rev.length - 1])}`, cols: rev, trips: up.sort(byTime) },
+  ].filter(d => d.trips.length)
 }
 
 function CityBus() {

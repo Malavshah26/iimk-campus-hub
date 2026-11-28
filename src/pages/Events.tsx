@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useFocusItem } from '../lib/focus'
+import { AudiencePicker } from '../components/AudiencePicker'
+import { audienceLabel, EVERYONE, isEveryone, type Audience } from '../lib/audience'
 import { useMe } from '../lib/auth'
 import { useRef_, type RefData } from '../lib/ref'
 import { myClasses, useCal } from '../lib/gcal'
@@ -43,6 +45,7 @@ export function Events() {
 
   const [f, setF] = useState({ title: '', organiser: '', venue: '', date: today(), starts: '18:00', ends: '19:30', link: '', description: '' })
   const [busy, setBusy] = useState(false)
+  const [aud, setAud] = useState<Audience>(EVERYONE)
   const [filter, setFilter] = useState<Filter>('up')
   const [q, setQ] = useState('')
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value })
@@ -60,11 +63,12 @@ export function Events() {
     const { error } = await supabase.from('events').insert({
       title: f.title.trim().slice(0, 100), organiser: f.organiser.trim().slice(0, 60) || null, venue: f.venue.trim().slice(0, 80) || null,
       event_date: f.date, starts: f.starts, ends: f.ends, link: link || null, description: f.description.trim().slice(0, 600) || null,
+      ...(isEveryone(aud) ? {} : aud),
     })
     setBusy(false)
     if (error) return toast(explain(error.message))
     setF({ ...f, title: '', venue: '', link: '', description: '' })
-    toast('Event posted.')
+    toast(isEveryone(aud) ? 'Event posted.' : `Event posted for ${audienceLabel(aud)}.`)
     reload()
   }
 
@@ -106,6 +110,7 @@ export function Events() {
           {formClasses.length ? <><b>Classes at this time</b>{formClasses.map(c => <div key={c}>{c}</div>)}</> : <b>No classes at this time.</b>}
           {formEvents.length > 0 && <div style={{ marginTop: 6 }}><b>Other events:</b> {formEvents.map(e => `${e.title} (${e.starts}–${e.ends})`).join('; ')}</div>}
         </div>
+        <AudiencePicker id="e-aud" label="Who’s it for" value={aud} onChange={setAud} />
         <label htmlFor="e-link">Link (optional)</label>
         <input id="e-link" type="url" maxLength={300} value={f.link} onChange={set('link')} placeholder="Registration form, poster…" />
         <label htmlFor="e-desc">Details</label>
@@ -132,6 +137,7 @@ export function Events() {
                   return (
                     <div id={'it-' + e.id} className={'card' + (e.event_date < t ? ' closed' : '')} key={e.id}>
                       <div className="ch"><h3>{e.title}</h3><b className="when">{e.starts}–{e.ends}</b></div>
+                      {(!isEveryone(e) || e.sample) && <div className="lfchips" style={{ marginTop: 4 }}>{!isEveryone(e) && <span className="tag t-mut">For {audienceLabel(e)}</span>}{e.sample && <span className="tag t-sun">Sample</span>}</div>}
                       <div className="meta">{[e.venue, e.organiser || e.poster?.name].filter(Boolean).join(' · ')}{e.event_rsvps.length ? ` · ${e.event_rsvps.length} going` : ''}</div>
                       {mine.length > 0 && <div className="flag">Clashes with your class: {mine.map(c => `${c.name} (${c.starts}–${c.ends})`).join(', ')}</div>}
                       {others.length > 0 && <div className="flag soft">Overlaps with: {others.map(o => o.title).join(', ')}</div>}

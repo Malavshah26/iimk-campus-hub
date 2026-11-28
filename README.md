@@ -2,7 +2,9 @@
 
 One web app for everyday campus life at IIM Kozhikode, run by the Students' Council.
 
-Six main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls, Events) · **Mess & laundry** · **Transport** (Shuttle, Autos & taxis, Carpool) · **Market** (Buy & sell, Lost & found) · **Campus** (Book a room, Complaints, Contacts).
+Seven main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls, Events) · **Chat** (your section and hostel) · **Mess & laundry** · **Transport** (Shuttle, Autos & taxis, Carpool) · **Market** (Buy & sell, Lost & found) · **Campus** (Book a room, Medical, Complaints, Contacts).
+
+Notices, events and polls/elections can be for everyone, one batch (year), one section or one hostel.
 
 | Tab | What it does |
 |---|---|
@@ -11,10 +13,12 @@ Six main headers, each with its tabs: **Classes** · **Updates** (Notices, Polls
 | **Polls** | Council quick polls (change your vote until it closes) and **elections** with a secret ballot: one final vote each, nobody can link a vote to a person, results only after closing. For everyone, one year or one section |
 | **Events** | Anyone can post club events and talks; flags clashes with other events and with *your* classes, shows organisers which sections have class at that time; “I’m going”, Google Calendar / .ics |
 | **Mess menu** | Weekly menu with what’s on now; 👍/👎 per meal (totals for all, comments only for the council) |
-| **Shuttle** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): pick your stop and destination, next shuttle highlighted; city buses if any |
+| **Shuttle** | Campus shuttle (PGP Auditorium, Phase V, C&D Housing, Maingate): From/To (or anywhere), next shuttle with its stops, full timetable per direction; city buses if any |
 | **Autos & taxis** | Auto and taxi drivers who serve campus, with Call / WhatsApp / Copy |
 | **Laundry** | Live washing-machine status for all 17 hostels, queues, fault reports, “wash done” notification |
-| **Carpool** | Post where and when you’re going; see rides going the same way, with Google Maps directions |
+| **Carpool** | Post where and when you’re going (1–6 seats free); see rides going the same way, call or WhatsApp the poster; separate **Airport cabs** to/from Calicut airport matched by flight time |
+| **Chat** | Group chat for your section and your hostel, with reporting; admins only see reported messages |
+| **Medical** | Call the IIMK ambulance or dispensary; request medicines (delivered or for pick-up), private to you and the medical desk |
 | **Book a room** | Discussion rooms and courts: day view, tap a free slot, no double bookings, fair-use limits |
 | **Lost & found** | Post lost or found items with photo, category, campus place and time; each gets a code like LF-2611-X4EK. The board suggests lost↔found matches (and notifies you of new ones), people respond ("This is mine", "I found it") or WhatsApp the poster, finders say where the item is now (with them, security, admin office). Mark reunited; report bad posts; council **Desk** to hide reports, hand over desk items and close old posts |
 | **Buy & sell** | Sell, rent out or ask for books, cycles, coolers, room items, with photos |

@@ -8,8 +8,9 @@ About 30 minutes. You need: a GitHub account (this repository), a free [Supabase
 > `0003_campus_shuttle.sql` (campus shuttle timetable), `0004_section_sessions.sql` (section timetables filled from
 > students' synced calendars), `0005_contact_emails.sql` (emails on contacts, real IIMK office numbers), `0006_polls_birthdays.sql`
 > (polls and elections, opt-in birthdays), `0007_lost_found.sql` (categories, places, matches, responses and reports in
-> Lost & found), `0008_launch_overview.sql` (Admin -> Overview: launch checklist and sign-up numbers). Until then the
-> new parts say they need the database update;
+> Lost & found), `0008_launch_overview.sql` (Admin -> Overview: launch checklist and sign-up numbers),
+> `0009_audiences_chat_medical.sql` (posts for a batch/section/hostel, group chats, medicine requests, airport cabs,
+> sample posts). Until then the new parts say they need the database update;
 > everything else keeps working.
 
 ---
@@ -34,11 +35,12 @@ In the Supabase dashboard open **SQL Editor → New query**, then run these file
 6. `supabase/migrations/0006_polls_birthdays.sql`: polls and secret-ballot elections, opt-in section birthdays
 7. `supabase/migrations/0007_lost_found.sql`: Lost & found with categories, places, reference codes, matches, responses and reports
 8. `supabase/migrations/0008_launch_overview.sql`: Admin -> Overview (launch checklist, sign-ups, activity)
-9. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
-10. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
-11. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
+9. `supabase/migrations/0009_audiences_chat_medical.sql`: notices/events/polls for a batch, section or hostel; section and hostel chats; medicine requests; airport cabs; sample posts (added once an admin exists; run it again after step 6 on a new setup)
+10. `supabase/seed.sql`: hostels, class timings, sample menu and contacts
+11. *(Demo only, skip for real use)* `supabase/seed_timetable.sql` fills every section with **made-up** subjects. To remove them later: `delete from public.timetable;`
+12. Optional: the latest mess menu from `supabase/menus/` (e.g. `2026-11_mess_menu.sql`)
 
-Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002–0008 and the seeds.
+Each should finish with "Success. No rows returned". If Supabase pops up a "destructive operation" warning, click **Run this query** (the files remove and recreate access rules so they can be re-run). Running a file twice is harmless for 0002–0009 and the seeds.
 
 ## 3. Check the email domain
 
@@ -121,6 +123,9 @@ On the **Admin** page, start with **Overview**: its launch checklist shows which
 - **Contacts:** the IIMK office numbers and emails come from migration 0005. Add more (security, medical centre, mess office, computer centre, library) in **Admin → Contacts**; several emails can go in one contact, separated by commas.
 - **Polls & elections:** start them from the **Polls** tab (admins see a form). *Quick poll*: one choice each, changeable until it closes, results after voting. *Election*: secret ballot, one final vote each, results only after closing; the database stores that someone voted separately from what they voted, so not even admins can link the two. **Who voted** lists voters (names only) so you can check eligibility. Voting by section relies on the section students set in their profile.
 - **Lost & found:** council admins get a **Desk** view (Market → Lost & found → Desk): posts students reported (hide or dismiss), found items handed to security or the admin office (**Handed to owner**), posts open for 30+ days (**Close as unclaimed**) and hidden posts. Old reunited and closed posts are removed by **Usage & clean-up**.
+- **Medical:** add the campus numbers in **Admin → Contacts** with group `Medical` (a name containing *Ambulance* and one containing *Dispensary*); they become the Call buttons on **Campus → Medical**. Then add who handles medicine requests: **Campus → Medical → Medical desk** (by email). Requests are private to the student and the desk, not all admins.
+- **Sample posts:** 0009 adds a few sample Buy & sell listings, events and polls (marked *Sample*) so the app doesn't look empty. Remove them all with one tap in **Admin → Overview** once real posts come in.
+- **Chats:** every student is in their section's chat and their hostel's chat. Admins don't read chats; reported messages appear under **Chat → Reported messages** for admins to remove or dismiss.
 - **Hostels:** set the real number of washing machines in each hostel.
 - **Facilities:** the rooms and courts students can book. The six listed are samples: rename, add, or untick *Bookable*.
 - **Class timings:** already set to 09:15 start, 75-minute classes, 20-minute breaks, lunch 13:40–14:40.

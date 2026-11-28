@@ -1,5 +1,7 @@
 /** Auto and taxi drivers live in `contacts` under this group; the Transport page lists them. */
 export const AUTO_GROUP = 'Autos & taxis'
+/** Campus medical numbers (contacts group): names containing "Ambulance" and "Dispensary" become the Medical page's call buttons. */
+export const MEDICAL_GROUP = 'Medical'
 
 const digitsOf = (s: string) => s.replace(/\D/g, '')
 

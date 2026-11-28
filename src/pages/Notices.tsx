@@ -8,6 +8,8 @@ import { isLive, markSeen, useNotices } from '../lib/notices'
 import { Text } from '../components/Text'
 import { Empty, ErrorNote, Loading } from '../components/Bits'
 import { useFocusItem } from '../lib/focus'
+import { AudiencePicker } from '../components/AudiencePicker'
+import { audienceLabel, EVERYONE, isEveryone, type Audience } from '../lib/audience'
 
 const posted = (iso: string) => dayLabel(dstr(new Date(iso)))
 
@@ -20,7 +22,7 @@ export function NoticeCard({ n, admin, onChange }: { n: Notice; admin?: boolean;
   }
   return (
     <div id={'it-' + n.id} className={'card notice' + (n.pinned ? ' pin' : '') + (isLive(n) ? '' : ' closed')}>
-      <div className="ch"><h3>{n.title}</h3>{n.pinned && <span className="tag t-ok">Pinned</span>}</div>
+      <div className="ch"><h3>{n.title}</h3><span className="lfchips">{!isEveryone(n) && <span className="tag t-mut">For {audienceLabel(n)}</span>}{n.pinned && <span className="tag t-ok">Pinned</span>}</span></div>
       <div className="meta">Council · {posted(n.created_at)}{n.expires_on ? ` · until ${dayLabel(n.expires_on)}` : ''}</div>
       {n.body && <Text text={n.body} />}
       {(n.link || admin) && <div className="acts">
@@ -43,6 +45,7 @@ export function Notices() {
   const [link, setLink] = useState('')
   const [pinned, setPinned] = useState(false)
   const [until, setUntil] = useState('')
+  const [aud, setAud] = useState<Audience>(EVERYONE)
   const [busy, setBusy] = useState(false)
   const [old, setOld] = useState(false)
   // Opening this tab counts as reading everything.
@@ -54,11 +57,11 @@ export function Notices() {
     const l = link.trim()
     if (l && !/^https?:\/\//i.test(l)) return toast('Links must start with http:// or https://')
     setBusy(true)
-    const { error } = await supabase.from('notices').insert({ title: title.trim().slice(0, 120), body: body.trim().slice(0, 2000) || null, link: l || null, pinned, expires_on: until || null })
+    const { error } = await supabase.from('notices').insert({ title: title.trim().slice(0, 120), body: body.trim().slice(0, 2000) || null, link: l || null, pinned, expires_on: until || null, ...(isEveryone(aud) ? {} : aud) })
     setBusy(false)
     if (error) return toast(explain(error.message))
-    setTitle(''); setBody(''); setLink(''); setPinned(false); setUntil('')
-    toast('Notice posted. Everyone with the app open sees it now.')
+    setTitle(''); setBody(''); setLink(''); setPinned(false); setUntil(''); setAud(EVERYONE)
+    toast(isEveryone(aud) ? 'Notice posted. Everyone with the app open sees it now.' : `Notice posted for ${audienceLabel(aud)}.`)
     reload()
   }
 
@@ -92,6 +95,7 @@ export function Notices() {
         <textarea id="n-body" maxLength={2000} rows={5} value={body} onChange={e => setBody(e.target.value)} placeholder="Where, what to bring, who to contact…" />
         <label htmlFor="n-link">Link (optional)</label>
         <input id="n-link" type="url" maxLength={300} value={link} onChange={e => setLink(e.target.value)} placeholder="https://forms.gle/…" />
+        <AudiencePicker id="n-aud" value={aud} onChange={setAud} />
         <label htmlFor="n-until">Show until (optional)</label>
         <input id="n-until" type="date" min={today()} value={until} onChange={e => setUntil(e.target.value)} />
         <label className="ck" style={{ marginTop: 12 }}><input type="checkbox" checked={pinned} onChange={e => setPinned(e.target.checked)} /> Pin to the top of everyone’s app</label>

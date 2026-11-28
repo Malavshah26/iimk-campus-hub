@@ -25,7 +25,11 @@ export interface Ride {
   note: string | null
   created_at: string
   poster: Person | null
-  ride_members: { user_id: string; member: { name: string } | null }[]
+  ride_members: { user_id: string; member: { name: string; phone?: string | null } | null }[]
+  /** 0009: 'city' (default), or an airport cab with its flight. */
+  trip?: 'city' | 'to_airport' | 'from_airport'
+  flight?: string | null
+  flight_time?: string | null
 }
 
 export interface LostItem {
@@ -72,6 +76,7 @@ export interface Listing {
   status: 'open' | 'done'
   created_at: string
   poster: Person | null
+  sample?: boolean
 }
 
 export interface Washer {
@@ -119,6 +124,10 @@ export interface Notice {
   pinned: boolean
   expires_on: string | null
   created_at: string
+  // 0009: who it's for (all null = everyone)
+  year?: string | null
+  section?: string | null
+  hostel?: string | null
 }
 
 export interface CampusEvent {
@@ -135,6 +144,10 @@ export interface CampusEvent {
   created_at: string
   poster: Person | null
   event_rsvps: { user_id: string }[]
+  year?: string | null
+  section?: string | null
+  hostel?: string | null
+  sample?: boolean
 }
 
 export type ComplaintStatus = 'open' | 'progress' | 'fixed'
@@ -191,6 +204,8 @@ export interface Poll {
   created_at: string
   created_by: string | null
   options: PollOption[]
+  hostel?: string | null
+  sample?: boolean
 }
 export interface PollTally { poll_id: string; voters: number; counts: Record<string, number> | null }
 
